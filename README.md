@@ -1,12 +1,10 @@
-Hypercharge Zahlungsschnittstelle für Shopware	{#Headline}
+Hypercharge Zahlungsschnittstelle für Shopware	
 =====================
 
 Die Hypercharge-Zahlungsschnittstelle ermöglicht es Ihnen, Ihren Kunden eine große Reihe an Zahlungsmethoden in Ihrem Shopware-Shop anzubieten – sowohl Off- als auch Online. Sensible Daten werden dabei sicher und vertraulich auf der Hypercharge-Plattform behandelt.
 
 **Shopware-Versionen**: Das Plugin ist aktuell für Shopware 4.0.x bis 4.2.x getestet und freigegeben. 
 
-----------
->[TOC]
 
 ---------
  1. Installation des Plugins, Kurzbeschreibung
