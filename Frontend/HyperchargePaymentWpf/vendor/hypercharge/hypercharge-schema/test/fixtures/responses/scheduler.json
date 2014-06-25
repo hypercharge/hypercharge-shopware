@@ -1,0 +1,12 @@
+{
+	"type": "DateRecurringSchedule",
+	"unique_id": "e1420438c52b4cb3a03a14a7e4fc16e1",
+	"payment_transaction_unique_id": "e1420438c52b4cb3a03a14a7e4fc16e1",
+	"amount": 73100,
+	"interval": "monthly",
+	"start_date": "2013-11-13",
+	"end_date": "2014-06-30",
+	"currency": "USD",
+	"active": true,
+	"timestamp": "2013-08-13T16:42:09Z"
+}

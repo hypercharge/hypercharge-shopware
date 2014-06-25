@@ -1,0 +1,30 @@
+{
+	"name":"hypercharge/hypercharge-php",
+	"description":"Hypercharge PHP Library / SDK",
+	"keywords": ["hypercharge", "payment", "api", "sdk"],
+	"hompage":"http://hypercharge.net",
+	"license":"MIT",
+	"authors": [
+		{
+			"name": "Jan Mentzel",
+			"email": "jan@islandofwaiting.de",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": ">=5.3",
+		"ext-curl": "*",
+		"ext-hash": "*",
+		"ext-simplexml": "*",
+		"ext-dom": "*",
+		"hypercharge/hypercharge-schema": "*"
+	},
+	"require-dev": {
+		"simpletest/simpletest": "*",
+		"mockery/mockery": "dev-master@dev"
+	},
+	"autoload": {
+		"classmap": ["lib/Hypercharge/"]
+		,"files": ["lib/Hypercharge/errors.php"]
+	}
+}

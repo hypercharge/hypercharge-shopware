@@ -1,0 +1,11 @@
+{
+   "payment_transaction_unique_id":"994f972140ba4bac19e6dfe329858c83",
+   "payment_transaction_status":"approved",
+   "recurring_schedule_unique_id":"e8fdf10b71d146c57383b5a746da5f4c",
+   "recurring_event_unique_id":"994f972140ba4bac19e6dfe329858c83",
+   "notification_type":"RecurringEvent",
+   "payment_transaction_channel_token":"edd2b8eee91584c9ce0f7b346312fae9658b92e3",
+   "signature":"54abc7119c43cdb10ce9edfa3f9aa40c2a82006888556a62f8e919898c5182150f5f32d9f5c394d5553a80a885956661b7a1218ab36877c51351f50379932e38",
+   "recurring_event_due_date":"2013-08-19",
+   "payment_transaction_transaction_type":"recurring_sale"
+}
