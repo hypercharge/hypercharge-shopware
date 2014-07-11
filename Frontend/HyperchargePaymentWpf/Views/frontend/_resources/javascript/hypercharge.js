@@ -1,4 +1,6 @@
 (function($) {
+    var nfxAPICall = 0;
+    
     onSubmitForm = function(event) {
         var checked_method = $("input[name='register[payment]']:checked").parents('.method').find('.hyperchargedata').children('.hypercharge'),
                 form = $("input[name='register[payment]']:checked").parents('form'),
@@ -31,6 +33,11 @@
     }
 
     function sendFormToShopware(formUrl, errorUrl, data) {
+        //$('#confirm .actions input').attr("disabled", "disabled");//avoid sending the data more than once
+        if(nfxAPICall == 1){
+            return;
+        }
+        nfxAPICall = 1;
         jQuery.support.cors = true;
         jQuery.ajax({
             url: formUrl,
@@ -38,12 +45,14 @@
             dataType: 'json',
             success: function(result) {
                 if (result.success) {
-                     sendFormToHypercharge(result.redirect_url, result.return_success_url, errorUrl, data);
+                    sendFormToHypercharge(result.redirect_url, result.return_success_url, errorUrl, data);
                 }
                 return;
             },
             error: function(jqXHR, tranStatus, errorThrown) {
+                //$('#confirm .actions input').attr("disabled", "");
                 alert(errorThrown.message);
+                nfxAPICall = 0;
                 //window.location.href = errorUrl;
             }
         });
@@ -58,10 +67,12 @@
             data: data,
             dataType: 'jsonp xml',
             success: function(result) {
+                //$('#confirm .actions input').attr("disabled", "");
                 window.location.href = successUrl;
                 return true;
             },
             error: function(jqXHR, tranStatus, errorThrown) {
+                //$('#confirm .actions input').attr("disabled", "");
                 if (jqXHR.status == 200) {
                     //window.location.href = successUrl;
                     //we will not do the redirection to success action anymore because we need to submit the current form (for AGB)

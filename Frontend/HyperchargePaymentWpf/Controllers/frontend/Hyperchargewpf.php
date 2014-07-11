@@ -122,11 +122,12 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     'forceSecure' => true
                 ));
             }
+            $hyperchargeTransactionId = $transactionId . ' ' . $uniquePaymentId;
+            $hyperchargeTransactionId = \Hypercharge\Helper::appendRandomId($hyperchargeTransactionId);
             $paymentData = array(
                 'usage' => 'Web Payment Form transaction',
                 'description' => 'Web Payment Form transaction',
-                'transaction_id' => $transactionId . ' '
-                . $uniquePaymentId,
+                'transaction_id' => $hyperchargeTransactionId,
                 'amount' => (int) ($this->getAmount() * 100),
                 'currency' => $currency,
                 'customer_email' => $user['additional']['user']['email'],
@@ -228,6 +229,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
      * Upon return from the gateway, the order is saved by this method
      */
     public function successAction() {
+        Shopware()->Session()->offsetUnset("nfxLastAPICall");
         $request = $this->Request();
         $this->saveOrder($request->getParam('transactionID'), $request->getParam('uniquePaymentID'), null, true);
         $this->redirect(array('controller' => 'checkout',
@@ -262,6 +264,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
      * payment upon return of the customer from the gateway
      */
     public function failedAction() {
+        Shopware()->Session()->offsetUnset("nfxLastAPICall");
         $request = $this->Request();
         $this->View()->nfxErrorMessage = Shopware()->Session()->nfxErrorMessage;
         Shopware()->Session()->offsetUnset('nfxErrorMessage');
@@ -300,6 +303,14 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 exit();
             }
             $paymentH = $notification->getPayment();
+            
+            if($paymentH->isError() && $paymentH->error->status_code){
+                $message = "ERROR: " . $paymentH->error->status_code . ": " . $paymentH->error->message . ' - ' . $paymentH->error->technical_message;
+                $plugin->logAction($message);
+                exit();
+            }
+            $plugin->logAction("payment OK");
+            
             // Find the transaction
             $trn = explode('---', $paymentH->transaction_id);
             list($transactionId, $paymentId) = explode(' ', $trn[0]);
@@ -351,7 +362,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     break;
             }
             if (null === $newStatus) {
-                $plugin->logAction('Undefined transaction status');
+                $plugin->logAction('Undefined transaction status: '. $paymentH->status);
                 exit();
             }
 
@@ -372,6 +383,24 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
     public function hyperchargeMobileAction() {
         try {
+            $plugin = $this->Plugin();
+            //check for double-click; avoid sending the data more than once
+            $session = Shopware()->Session();
+            $nfxLastAPICall = 0;
+            if(isset($session->nfxLastAPICall)){
+                $nfxLastAPICall = $session->nfxLastAPICall;
+            }
+            $session->nfxLastAPICall = time();
+            $diff = $session->nfxLastAPICall - $nfxLastAPICall;
+            $plugin->logAction("Last call $diff \n");
+            if($diff <= 5){
+                $message = "Double click.\n";
+                $plugin->logAction($message);
+                throw new Enlight_Controller_Exception($message);
+                exit();
+            }
+            
+            //no double click => ok
             $initial_encoding = mb_internal_encoding();
             $request = $this->Request();
             $router = $this->Front()->Router();
@@ -384,7 +413,6 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             }
             // Get currency, to be able to find channel
             $currency = $this->getCurrencyShortName();
-            $plugin = $this->Plugin();
             $config = $plugin->Config();
             $channel = $this->getChannelByCurrency($currency);
             $plugin->logAction("hyperchargemobile - Payment method " . print_r($payment_name, true));
@@ -407,11 +435,12 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             $uniquePaymentId = $this->createPaymentUniqueId();
             $transactionId = $this->createPaymentUniqueId();
+            $hyperchargeTransactionId = $transactionId . ' ' . $uniquePaymentId;
+            $hyperchargeTransactionId = \Hypercharge\Helper::appendRandomId($hyperchargeTransactionId);
             $paymentData = array(
                 'type' => 'MobilePayment',
                 'usage' => 'Mobile Payment transaction',
-                'transaction_id' => $transactionId . ' '
-                . $uniquePaymentId,
+                'transaction_id' => $hyperchargeTransactionId,
                 'amount' => (int) ($this->getAmount() * 100),
                 'currency' => $currency,
                 'customer_email' => $user['additional']['user']['email'],
@@ -433,7 +462,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             $paymentData['billing_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['billing_address']);
             $plugin->logAction("$payment_name started. Payment data\n"
                     . print_r($paymentData, true));
-
+            
             mb_internal_encoding("ISO-8859-1");
             // create the mobile payment session
             $paymentH = Hypercharge\Payment::mobile($paymentData);
@@ -449,7 +478,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             Shopware()->Session()->nfxUniquePaymentID = $uniquePaymentId;
             Shopware()->Session()->nfxTransactionID = $transactionId;
-
+            
             echo json_encode(array(
                 "success" => true,
                 "redirect_url" => $paymentH->redirect_url,

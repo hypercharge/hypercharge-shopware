@@ -12,6 +12,8 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.0 / implement Mobile API + select WPF payment method in Shopware + iFrame for WPF / 2014-05-13
  * @version 2.0.1 / fix UTF8 issue + some translations / 2014-06-10
  * @version 2.0.2 / some translations / 2014-06-12
+ * @version 2.0.3 / Helper::appendRandomId + check error message on notify + disable submit button after the click / 2014-07-09
+ * @version 2.0.4 / add flag to avoid double click / 2014-07-11
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -595,7 +597,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.2";
+        return "2.0.4";
     }
 
     /**
