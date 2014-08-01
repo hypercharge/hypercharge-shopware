@@ -63,7 +63,7 @@
                 check: function(attr) {
                     if (!attr["val"] || !attr["card_type"])
                         return true;
-                    
+
                     var re = creditCardTypes[attr["card_type"]][1];
                     var v = attr["val"];
 
@@ -91,6 +91,87 @@
                     return true;
                 },
                 msg: 'expiration_date'
+            },
+            expiration_date: {
+                check: function(attr) {
+                    if (!attr["val"] || !attr["expiration_month"])
+                        return true;
+
+                    var ccExpMonth = attr["expiration_month"];
+                    var ccExpYear = attr["val"];
+                    var currentTime = new Date();
+                    var currentMonth = currentTime.getMonth() + 1;
+                    var currentYear = currentTime.getFullYear();
+                    if (ccExpMonth < currentMonth && ccExpYear == currentYear) {
+                        return false;
+                    }
+                    return true;
+                },
+                msg: 'expiration_date'
+            },
+            not_allowed: {
+                check: function(attr) {
+                    if (attr["val"] == 1)
+                        return false;
+                    else
+                        return true;
+                },
+                msg: 'not_allowed'
+            },
+            birthday: {
+                check: function(attr) {
+                    if (!attr["val"] || !attr["birthday_month"] || !attr["birthday_day"])
+                        return true;
+
+                    var ccBirthdayMonth = attr["birthday_month"];
+                    var ccBirthdayDay = attr["birthday_day"];
+                    var ccBirthdayYear = attr["val"];
+                    var birthday = new Date(ccBirthdayYear, ccBirthdayMonth - 1, ccBirthdayDay);
+                    
+                    if (ccBirthdayMonth - 1 != birthday.getMonth() || ccBirthdayDay != birthday.getDate() || ccBirthdayYear != birthday.getFullYear()) {
+                        return true;
+                    }
+                    
+                    var currentDate = new Date();
+                    var thisYear = 0;
+                    if (currentDate.getMonth() < birthday.getMonth()) {
+                        thisYear = 1;
+                    } else if ((currentDate.getMonth() == birthday.getMonth()) && currentDate.getDate() < birthday.getDate()) {
+                        thisYear = 1;
+                    }
+                    var age = currentDate.getFullYear() - birthday.getFullYear() - thisYear;
+                    if (age < 18) {
+                        return false;
+                    }
+                    return true;
+                },
+                msg: 'birthday'
+            },
+            date: {
+                check: function(attr) {
+                    if (!attr["val"] || !attr["birthday_month"] || !attr["birthday_day"])
+                        return true;
+
+                    var ccBirthdayMonth = attr["birthday_month"];
+                    var ccBirthdayDay = attr["birthday_day"];
+                    var ccBirthdayYear = attr["val"];
+
+                    var birthday = new Date(ccBirthdayYear, ccBirthdayMonth - 1, ccBirthdayDay);
+                    if (ccBirthdayMonth - 1 != birthday.getMonth() || ccBirthdayDay != birthday.getDate() || ccBirthdayYear != birthday.getFullYear()) {
+                        return false;
+                    }
+                    return true;
+                },
+                msg: 'date'
+            },
+            agree: {
+                check: function(attr) {
+                    if(!attr["checked"]){
+                        return false;
+                    }
+                    return true;
+                },
+                msg: 'agree'
             }
         }
         var testPattern = function(value, pattern) {
@@ -191,28 +272,44 @@
                     container = field.parent(),
                     errors = [],
                     messages = {
-                        'required' : {
-                            'en' : "This is a required field.",
-                            'de' : 'Diese Angabe wird benötigt.'
+                        'required': {
+                            'en': "This is a required field.",
+                            'de': 'Diese Angabe wird benötigt.'
                         },
-                        'card_number' : {
-                            'en' : "Please enter a valid credit card number.",
-                            'de' : 'Bitte geben Sie eine gültige Kreditkartennummer an.'
+                        'card_number': {
+                            'en': "Please enter a valid credit card number.",
+                            'de': 'Bitte geben Sie eine gültige Kreditkartennummer an.'
                         },
-                        'card_type' : {
-                            'en' : "Card type does not match credit card number.",
-                            'de' : "Kartentyp stimmt nicht mit Kreditkartennummer überein."
+                        'card_type': {
+                            'en': "Card type does not match credit card number.",
+                            'de': "Kartentyp stimmt nicht mit Kreditkartennummer überein."
                         },
-                        'cvv' : {
-                            'en' : "Please enter a valid credit card verification number.",
-                            'de' : "Bitte geben Sie eine gültige Kreditkarten Kontroll-Nummer/Verifizierungscode ein."
+                        'cvv': {
+                            'en': "Please enter a valid credit card verification number.",
+                            'de': "Bitte geben Sie eine gültige Kreditkarten Kontroll-Nummer/Verifizierungscode ein."
                         },
-                        'expiration_date' : {
-                            'en' : "Incorrect credit card expiration date.",
-                            'de' : 'Falsches Kreditkarten - Ablaufdatum.'
+                        'expiration_date': {
+                            'en': "Incorrect credit card expiration date.",
+                            'de': 'Falsches Kreditkarten - Ablaufdatum.'
+                        },
+                        'not_allowed': {
+                            'en': "",
+                            'de': '' // the message is already displayed
+                        },
+                        'birthday': {
+                            'en': "For this payment method you must be at least 18 years old.",
+                            'de': 'Für diese Zahlart müssen Sie mind. 18 Jahre sein.'
+                        },
+                        'agree': {
+                            'en': "You must agree to the terms and conditions of this payment method.",
+                            'de': 'Sie müssen die AGB für diese Zahlart akzeptieren.'
+                        },
+                        'date': {
+                            'en': "Invalid date.",
+                            'de': 'ungültiges Datum.'
                         }
                     };
-            
+
             if (container.prop('tagName') != "P") {
                 container = container.parent();
             }
@@ -231,6 +328,13 @@
                 if (types[type] == "cvv") {
                     attr["card_type"] = field.parents('.hypercharge').find("#card_type").val();
                 }
+                if (types[type] == "birthday" || types[type] == "date") {
+                    attr["birthday_month"] = field.parents('.hypercharge').find("#birthday_month").val();
+                    attr["birthday_day"] = field.parents('.hypercharge').find("#birthday_day").val();
+                }
+                if (types[type] == "agree") {
+                    attr["checked"] = field.parents('.hypercharge').find("#agree").is(":checked");//field.is(":checked");
+                }
                 //attr["disabled"] = field.attr("disabled");
                 //attr["required_group_ok"] = field.attr("required_group_ok");
                 //attr["interval_ok"] = field.attr("interval_ok");
@@ -238,12 +342,12 @@
                     //field.addClass("errorbox");
                     //container.addClass("error");
                     var lang = field.parents('.hypercharge').parents('.hyperchargedata').find("input[name='nfxLang']").val(),
-                        msg = eval("messages[rule.msg]." + lang);
-                
-                    if(msg == undefined){
+                            msg = eval("messages[rule.msg]." + lang);
+
+                    if (msg == undefined) {
                         msg = messages[rule.msg].de;
                     }
-                    
+
                     errors.push(msg);
                 }
             }

@@ -18,5 +18,3 @@
         </div>
     </div>
 {/block}
-
-{block name='frontend_index_actions'}{/block}

@@ -230,6 +230,10 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
      */
     public function successAction() {
         Shopware()->Session()->offsetUnset("nfxLastAPICall");
+        Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayDay");
+        Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayMonth");
+        Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayYear");
+        Shopware()->Session()->offsetUnset("nfxPayolutionAgree");
         $request = $this->Request();
         $this->saveOrder($request->getParam('transactionID'), $request->getParam('uniquePaymentID'), null, true);
         $this->redirect(array('controller' => 'checkout',
@@ -386,6 +390,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             $plugin = $this->Plugin();
             //check for double-click; avoid sending the data more than once
             $session = Shopware()->Session();
+            $session->offsetUnset("nfxErrorMessage");
             $nfxLastAPICall = 0;
             if(isset($session->nfxLastAPICall)){
                 $nfxLastAPICall = $session->nfxLastAPICall;
@@ -399,12 +404,26 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 throw new Enlight_Controller_Exception($message);
                 exit();
             }
-            
             //no double click => ok
             $initial_encoding = mb_internal_encoding();
             $request = $this->Request();
             $router = $this->Front()->Router();
-
+            
+            $payolution = $request->getParam('payolution');
+            if($payolution){
+                if($payolution["birthday_day"]){
+                    $session->nfxPayolutionBirthdayDay = $payolution["birthday_day"];
+                }
+                if($payolution["birthday_month"]){
+                    $session->nfxPayolutionBirthdayMonth = $payolution["birthday_month"];
+                }
+                if($payolution["birthday_year"]){
+                    $session->nfxPayolutionBirthdayYear = $payolution["birthday_year"];
+                }
+                if($payolution["agree"]){
+                    $session->nfxPayolutionAgree = $payolution["agree"];
+                }
+            }
             $payment_name = $this->getPaymentShortName();
             if (substr($payment_name, 0, 17) != 'hyperchargemobile') {
                 $plugin->logAction("hyperchargemobile - Invalid payment method " . print_r($payment_name, true));
@@ -460,6 +479,12 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             if (in_array($paymentData['billing_address']['country'], array('US', 'CA')))
                 $paymentData['billing_address']['state'] = $user['additional']['state']['shortcode'];
             $paymentData['billing_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['billing_address']);
+            if($payment_name == "hyperchargemobile_pa"){
+                if($user['billingaddress']["company"]){
+                    //B2B
+                    //$paymentData["company_name"] = $user['billingaddress']["company"];
+                }
+            }
             $plugin->logAction("$payment_name started. Payment data\n"
                     . print_r($paymentData, true));
             
@@ -490,6 +515,18 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         } catch (Exception $ex) {
             $plugin->logAction("ERROR\n"
                     . print_r($ex, true));
+            if (is_a($ex, 'Hypercharge\Errors\ValidationError')) {
+                $message = "ERROR: " . $ex->status_code . ": " . $ex->message . ' - ' . $ex->technical_message;
+                foreach ($ex->errors as $error) {
+                    $message .= "<br>" . $error["property"] . ": " . $error["message"];
+                }
+            } else {
+                $message = $ex->getMessage();
+            }
+            Shopware()->Session()->nfxErrorMessage=$message;
+            echo json_encode(array(
+                "success" => false
+            ));
         }
         mb_internal_encoding($initial_encoding);
         exit();

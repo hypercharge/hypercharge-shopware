@@ -14,6 +14,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.2 / some translations / 2014-06-12
  * @version 2.0.3 / Helper::appendRandomId + check error message on notify + disable submit button after the click / 2014-07-09
  * @version 2.0.4 / add flag to avoid double click / 2014-07-11
+ * @version 2.0.5 / add Purchase On Account - Payolution / 2014-07-22
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -41,7 +42,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $this->createSnippets();
         $this->createEvents();
 
-        return true;
+        return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
 
     /**
@@ -52,8 +53,12 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $this->createPayments();
         $this->createEvents();
         $this->createForm();
-        if($version <= "2.0.0"){
+        $this->createTranslations();
+        /*if($version <= "2.0.0"){
             $this->createSnippets("",true);
+        }*/
+        if($version < "2.0.5"){
+            $this->createSnippets();
         }
         
         /*$available_payments = $this->getAvailablePaymentMethods();
@@ -75,7 +80,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         }
          */
     
-        return true;
+        return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
 
     /**
@@ -210,11 +215,20 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             'label' => 'Allow the user to edit the billing address',
             'value' => false
         ));
+        $form->setElement('combo', 'payolution_countries', array(
+            'label' => 'Allow Purchase On Account - Payolution for Austria and Switzerland',
+            'required' => false,
+            'multiSelect' => true,
+            'store' => $this->getCountries()
+        ));
+        $form->setElement('text', 'agree_link', array(
+            'label' => 'My consent link',
+            'value' => ''
+        ));
         $form->setElement('checkbox', 'hypercharge_logging', array(
             'label' => 'Enable logging',
             'value' => false
         ));
-        $form->save();
     }
 
     /**
@@ -233,7 +247,9 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'hypercharge_layout' => 'Seiten-Layout des Zahlungsvorgangs',
                 'iFrameHeight' => 'iFrame H&ouml;he',
                 'iFrameWidth' => 'iFrame Breite',
-                'editable_by_user' => 'Editieren der Rechnungsadresse durch den Nutzer zulassen'
+                'editable_by_user' => 'Editieren der Rechnungsadresse durch den Nutzer zulassen',
+                'payolution_countries' => 'Rechnungskauf f&uuml;r &Ouml;sterreich und Schweiz',
+                'agree_link' => 'Meine Einwilligung Link'
             )
         );
         $shopRepository = Shopware()->Models()
@@ -337,14 +353,25 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $controller = $request->getControllerName();
         $action = $request->getActionName();
 
-        if (!$request->isDispatched() || $response->isException() || $request->getModuleName() != 'frontend' || $request->isXmlHttpRequest() || !(($controller == "checkout" && $action == "confirm") || ($controller == "payment_hyperchargewpf" && $action == "failed"))
+        if ($controller != "checkout" && $request->getModuleName() == 'frontend') {
+            Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayDay");
+            Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayMonth");
+            Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayYear");
+            Shopware()->Session()->offsetUnset("nfxPayolutionAgree");
+        }
+        if (!$request->isDispatched() || $response->isException() || $request->getModuleName() != 'frontend' || $request->isXmlHttpRequest() || !(($controller == "checkout" && $action == "confirm") || ($controller == "account" && $action == "payment") || ($controller == "payment_hyperchargewpf" && $action == "failed"))
         ) {
             return;
         }
 
         $view = $args->getSubject()->View();
         Shopware()->Template()->addTemplateDir($this->Path() . 'Views/');
-        $view->extendsTemplate('frontend/index/indexHypercharge.tpl');
+        $isSameAddress = $this->compareAddresses($view->sUserData);
+        $isAllowedCountry = $this->isAllowedCountry($view->sUserData["billingaddress"]["countryID"]);
+        
+        if ($controller != "account") {
+            $view->extendsTemplate('frontend/index/indexHypercharge.tpl');
+        }
         if ($controller == "checkout") {
             $view->extendsTemplate('frontend/payment_hyperchargewpf/mobile.tpl');
             $router = Shopware()->Router();
@@ -352,7 +379,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'controller' => 'PaymentHyperchargewpf', 'action' => 'hypercharge_mobile', 'forceSecure' => true
             ));
             $view->shopware_failed_redirect = $router->assemble(array(
-                'action' => 'failed', 'forceSecure' => true));
+                'controller' => 'PaymentHyperchargewpf','action' => 'failed', 'forceSecure' => true));
             $credit_card_types = array();
             $all_credit_card_types = $this->getCardTypes();
             $allowed_credit_card_types = $this->Config()->credit_card_types;
@@ -365,6 +392,27 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             }
             $view->credit_card_types = $credit_card_types;
             $view->nfxLang = Shopware()->Locale()->getLanguage();
+            $view->nfxSameAddress = $isSameAddress;
+            $view->nfxAllowedCountry = $isAllowedCountry;
+            $view->nfxAgreeText = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_pa')->get('AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.');
+            $view->nfxAgreeText = str_replace('href=""', 'href="' . $this->Config()->agree_link . '"', $view->nfxAgreeText);
+            $view->nfxPayolutionBirthdayDay = Shopware()->Session()->nfxPayolutionBirthdayDay;
+            $view->nfxPayolutionBirthdayMonth = Shopware()->Session()->nfxPayolutionBirthdayMonth;
+            $view->nfxPayolutionBirthdayYear = Shopware()->Session()->nfxPayolutionBirthdayYear;
+            $view->nfxPayolutionAgree = Shopware()->Session()->nfxPayolutionAgree;
+        }
+        if ($controller == "checkout" || $controller == "account") {
+            if(!$isAllowedCountry){
+                $paymentsVar = ($controller == "checkout") ? "sPayments" : "sPaymentMeans";
+                $payments = $view->Template()->getTemplateVars($paymentsVar);
+                $new_payments = array();
+                foreach($payments as $payment){
+                    if($payment["name"] != "hyperchargemobile_pa"){
+                        $new_payments[] = $payment;
+                    }
+                }
+                $view->assign($paymentsVar, $new_payments);
+            }
         }
     }
 
@@ -437,6 +485,13 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 "hypercharge_trx" => "purchase_on_account"
             ),
             array(
+                "name" => "hyperchargemobile_pa",
+                "description" => array(
+                    "en" => "Purchase On Account - Payolution",
+                    "de" => "Rechnungskauf via Payolution"
+                )
+            ),
+            array(
                 "name" => "hyperchargewpf_dp",
                 "description" => array(
                     "en" => "Direct Pay24",
@@ -502,7 +557,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 Shopware()->Db()->exec($sql);
             }
         }
-        return true;
+        //return true;
     }
     /**
      * Remove all the snippets for this plugin
@@ -527,6 +582,65 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             array("JCB", "JCB"),
             array("OT", (Shopware()->Locale()->getLanguage() == "de") ? "Andere" : "Other")
         );
+    }
+    
+    /**
+     * get accepted countries for
+     * @return type
+     */
+    private function getCountries() {
+        return array(
+            array("AT", (Shopware()->Locale()->getLanguage() == "de") ? "Österreich" : "Austria"),
+            array("CH", (Shopware()->Locale()->getLanguage() == "de") ? "Schweiz" : "Switzerland")
+        );
+    }
+
+    /**
+     * compare billing address vs shipping address
+     * @param type $userData
+     */
+    private function compareAddresses($userData){
+        $billing = $userData["billingaddress"];
+        $shipping = $userData["shippingaddress"];
+        if($billing["countryID"] == "0"){
+            $billing["countryID"] = "";
+        }
+        if($shipping["countryID"] == "0"){
+            $shipping["countryID"] = "";
+        }
+        if($billing["stateID"] == "0"){
+            $billing["stateID"] = "";
+        }
+        if($shipping["stateID"] == "0"){
+            $shipping["stateID"] = "";
+        }
+        return ($billing["company"] == $shipping["company"] && $billing["department"] == $shipping["department"] && 
+                $billing["salutation"] == $shipping["salutation"] && $billing["firstname"] == $shipping["firstname"] && 
+                $billing["lastname"] == $shipping["lastname"] && $billing["street"] == $shipping["street"] && 
+                $billing["streetnumber"] == $shipping["streetnumber"] && $billing["zipcode"] == $shipping["zipcode"] && 
+                $billing["city"] == $shipping["city"] && $billing["countryID"] == $shipping["countryID"] && 
+                $billing["stateID"] == $shipping["stateID"]);
+    }
+    
+    /**
+     * check if it is DE (or AT, CH)
+     * @param type $countryID
+     * @return int
+     */
+    private function isAllowedCountry($countryID){
+        $sql = "SELECT countryiso FROM s_core_countries WHERE id = ?";
+        $country = Shopware()->Db()->fetchOne($sql, array($countryID));
+        if($country == "DE"){
+            return 1;
+        }
+        $allowed_countries = $this->Config()->payolution_countries;
+            for ($i = 0; $i < count($allowed_countries); $i++) {
+                if($allowed_countries[$i] == $country){
+                    return 1;
+                }
+            }
+        
+        return 0;
     }
 
     /**
@@ -597,7 +711,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.4";
+        return "2.0.5";
     }
 
     /**

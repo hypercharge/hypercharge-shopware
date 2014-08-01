@@ -1,40 +1,78 @@
 (function($) {
     var nfxAPICall = 0;
-    
+
     onSubmitForm = function(event) {
         var checked_method = $("input[name='register[payment]']:checked").parents('.method').find('.hyperchargedata').children('.hypercharge'),
                 form = $("input[name='register[payment]']:checked").parents('form'),
                 field, shopware_redirect_url, shopware_failed_redirect_url,
-                json = '{ "payment": { ';
+                json = '{ "payment": { ',
+                json2 = '{ "payolution": { ',
+                birthday = [], //extra check for Purchase On Account
+                shipping_address = [];//extra check for Purchase On Account
 
         if (checked_method.attr('id') == undefined) {
             //this is not a Hypercharge payment method
             return true;
         }
+
         //validate mandatory fields
-        if(!form.validation()){
+        if (!form.validation()) {
             return false;
         }
+
         //create JSON data
         field = '.' + checked_method.attr('id') + '-field';
         checked_method.find(field).each(function(index, item) {
-            json += "\"" + item.id + "\" : \"" + $(item).val() + "\",";
+            if (item.id.substring(0, 8) == "birthday") {//extra check for Purchase On Account
+                birthday[item.id.replace("birthday_", "")] = $(item).val();
+                json2 += "\"" + item.id + "\" : \"" + $(item).val() + "\",";
+            } else if (item.id.substring(0, 16) == "shipping_address") {//extra check for Purchase On Account
+                shipping_address[item.id.replace("shipping_address_", "")] = $(item).val();
+            } else {
+                json += "\"" + item.id + "\" : \"" + $(item).val() + "\",";
+            }
         });
+        if (shipping_address["first_name"] != undefined) {
+            //Purchase On Account
+            json += '"shipping_address": { ';
+            json += '"first_name":"' + shipping_address["first_name"] + '",';
+            json += '"last_name":"' + shipping_address["last_name"] + '",';
+            json += '"address1":"' + shipping_address["address1"] + '",';
+            json += '"zip_code":"' + shipping_address["zip_code"] + '",';
+            json += '"city":"' + shipping_address["city"] + '",';
+            if (shipping_address["state"] != undefined) {
+                json += '"state":"' + shipping_address["state"] + '",';
+            }
+            json += '"country":"' + shipping_address["country"] + '"';
+            json += '}, ';
+        }
+        if (birthday['year'] != undefined && birthday['month'] != undefined && birthday['day'] != undefined) {
+            //Purchase On Account
+            birthday['month'] = ('00' + birthday['month']).slice(-2);
+            birthday['day'] = ('00' + birthday['day']).slice(-2);
+            json += "\"risk_params\":{\"birthday\":\"" + birthday['year'] + "-" + birthday['month'] + "-" + birthday['day'] + "\"},";
+            var agree = checked_method.find("#agree");
+            if(agree.attr('id') != undefined){
+                json2 += "\"" + agree.attr('id') + "\" : \"" + $(agree).val() + "\"";
+            }
+        }
         json += "\"payment_method\" : \"" + checked_method.attr('id').replace("hyperchargemobile-", "") + "\" } }";
+        json2 += " } }";
 
         var data = jQuery.parseJSON(json);
-
+        var data2 = jQuery.parseJSON(json2);
+        
         //submit 1 to Hypercharge via Shopware
         shopware_redirect_url = checked_method.find('#hyperchargemobile_shopware_redirect').val();
         shopware_failed_redirect_url = checked_method.find('#hyperchargemobile_shopware_failed_redirect').val();
-        sendFormToShopware(shopware_redirect_url, shopware_failed_redirect_url, data);
+        sendFormToShopware(shopware_redirect_url, shopware_failed_redirect_url, data, data2);
 
         return false;
     }
 
-    function sendFormToShopware(formUrl, errorUrl, data) {
+    function sendFormToShopware(formUrl, errorUrl, data, data2) {
         //$('#confirm .actions input').attr("disabled", "disabled");//avoid sending the data more than once
-        if(nfxAPICall == 1){
+        if (nfxAPICall == 1) {
             return;
         }
         nfxAPICall = 1;
@@ -43,9 +81,12 @@
             url: formUrl,
             type: 'POST',
             dataType: 'json',
+            data: data2,
             success: function(result) {
                 if (result.success) {
                     sendFormToHypercharge(result.redirect_url, result.return_success_url, errorUrl, data);
+                } else {
+                    window.location.href = errorUrl;
                 }
                 return;
             },
@@ -86,12 +127,26 @@
             }
         });
     }
-    
+
     $(document).ready(function() {
         $('#confirm .actions input').bind('click', onSubmitForm);
+
+        var payments = $("input[name='register[payment]']");
+        for (var i = 0; i < payments.length; i++) {
+            var pay = payments[i];
+            if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').attr('id') == 'hyperchargemobile-purchase_on_account') {
+                if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').find("#not_allowed").attr("id") != undefined) {
+                    if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').find("#not_allowed").val() == 1) {
+                        $(pay).attr("disabled", "disabled");
+                    } else {
+                        $(pay).attr("disabled", "");
+                    }
+                }
+            }
+        }
     });
 })(jQuery);
-    
+
 function toggleToolTip(value) {
     if (value) {
         jQuery("#payment-tool-tip").show();
