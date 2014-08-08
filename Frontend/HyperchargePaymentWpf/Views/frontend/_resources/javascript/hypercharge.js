@@ -5,6 +5,7 @@
         var checked_method = $("input[name='register[payment]']:checked").parents('.method').find('.hyperchargedata').children('.hypercharge'),
                 form = $("input[name='register[payment]']:checked").parents('form'),
                 field, shopware_redirect_url, shopware_failed_redirect_url,
+                agb = $("input:checkbox[id='sAGB']"),
                 json = '{ "payment": { ',
                 json2 = '{ "payolution": { ',
                 birthday = [], //extra check for Purchase On Account
@@ -14,12 +15,17 @@
             //this is not a Hypercharge payment method
             return true;
         }
-
         //validate mandatory fields
         if (!form.validation()) {
             return false;
         }
-
+        if (agb.attr('id') != undefined) {
+            //we want to validate AGB before sending data to Hypercharge
+            if(agb.prop('checked') == false){
+                alert(checked_method.parents('.hyperchargedata').find("input[name='nfxAGBMsg']").val());
+                return false;
+            }
+        }
         //create JSON data
         field = '.' + checked_method.attr('id') + '-field';
         checked_method.find(field).each(function(index, item) {

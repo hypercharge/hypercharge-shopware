@@ -15,6 +15,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.3 / Helper::appendRandomId + check error message on notify + disable submit button after the click / 2014-07-09
  * @version 2.0.4 / add flag to avoid double click / 2014-07-11
  * @version 2.0.5 / add Purchase On Account - Payolution / 2014-07-22
+ * @version 2.0.6 / validate AGB check / 2014-08-08
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -80,7 +81,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         }
          */
     
-        return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
+        return true;//array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
 
     /**
@@ -400,6 +401,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             $view->nfxPayolutionBirthdayMonth = Shopware()->Session()->nfxPayolutionBirthdayMonth;
             $view->nfxPayolutionBirthdayYear = Shopware()->Session()->nfxPayolutionBirthdayYear;
             $view->nfxPayolutionAgree = Shopware()->Session()->nfxPayolutionAgree;
+            $view->nfxAGBMsg = Shopware()->Snippets()->getNamespace('frontend/checkout/confirm')->get('ConfirmErrorAGB', 'Bitte bestätigen Sie unsere AGB');
         }
         if ($controller == "checkout" || $controller == "account") {
             if(!$isAllowedCountry){
@@ -711,7 +713,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.5";
+        return "2.0.6";
     }
 
     /**

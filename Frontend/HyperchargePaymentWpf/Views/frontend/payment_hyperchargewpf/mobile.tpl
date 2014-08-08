@@ -4,6 +4,7 @@
         <div class="grid_10 hyperchargedata">
             {include file="frontend/payment_hyperchargewpf/{$payment_mean.name}.tpl"}
             <input type="hidden" value="{$nfxLang}" name="nfxLang"/>
+            <input type="hidden" value="{$nfxAGBMsg}" name="nfxAGBMsg"/>
         </div>
     {/if}
 {/block}
@@ -29,6 +30,7 @@
                             <div class="hyperchargedata">
                                 {include file="frontend/payment_hyperchargewpf/{$sUserData.additional.payment.name}.tpl"}
                                 <input type="hidden" value="{$nfxLang}" name="nfxLang"/>
+                                <input type="hidden" value="{$nfxAGBMsg}" name="nfxAGBMsg"/>
                             </div>
                         </div>
                     </div>
