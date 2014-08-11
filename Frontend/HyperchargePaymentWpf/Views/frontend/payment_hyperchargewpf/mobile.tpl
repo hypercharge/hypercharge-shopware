@@ -6,6 +6,10 @@
             <input type="hidden" value="{$nfxLang}" name="nfxLang"/>
             <input type="hidden" value="{$nfxAGBMsg}" name="nfxAGBMsg"/>
         </div>
+    {elseif $sUserData.additional.payment.name|substr:0:14 == "hyperchargewpf"}
+        <div class="grid_10 hyperchargedata">
+            <div class="hypercharge" id="{$sUserData.additional.payment.name}"></div>
+        </div>
     {/if}
 {/block}
 <!-- For existing clients -->
@@ -37,6 +41,15 @@
                     <div class="clear">&nbsp;</div>
                 </div>
             </form>
+        {elseif $sUserData.additional.payment.name|substr:0:14 == "hyperchargewpf"}
+            <div class="grid_15 method">
+                <input type="radio" name="register[payment]" class="radio auto_submit" value="{$sUserData.additional.payment.id}" id="payment_mean{$sUserData.additional.payment.id}" checked="checked" style="display: none;"/>
+                <div class="grid_10">
+                    <div class="hyperchargedata">
+                        <div class="hypercharge" id="{$sUserData.additional.payment.name}"></div>
+                    </div>
+                </div>
+            </div>
         {/if}
     {/if}
 {/block}

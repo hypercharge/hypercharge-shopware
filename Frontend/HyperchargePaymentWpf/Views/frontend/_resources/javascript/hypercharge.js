@@ -15,6 +15,22 @@
             //this is not a Hypercharge payment method
             return true;
         }
+        if(checked_method.attr('id').substring(0, 14) == "hyperchargewpf"){
+            //WPF
+            if (agb.attr('id') != undefined) {
+                //if AGB is not check we let SHopware validation
+                if(agb.prop('checked') == false){
+                    return true;
+                }
+                if (nfxAPICall == 1) {
+                    return false;//avoid double click
+                }
+                nfxAPICall = 1;
+            }
+            
+            return true;
+        }
+        //Mobile
         //validate mandatory fields
         if (!form.validation()) {
             return false;

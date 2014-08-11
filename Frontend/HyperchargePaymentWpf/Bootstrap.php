@@ -16,6 +16,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.4 / add flag to avoid double click / 2014-07-11
  * @version 2.0.5 / add Purchase On Account - Payolution / 2014-07-22
  * @version 2.0.6 / validate AGB check / 2014-08-08
+ * @version 2.0.7 / avoid double click for WPF too + get client's birthday as default value + fix update() issue / 2014-08-11
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -81,7 +82,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         }
          */
     
-        return true;//array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
+        return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
 
     /**
@@ -177,10 +178,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $form = $this->Form();
 
         $form->setElement('boolean', 'hypercharge_test', array(
-            'label' => 'Use test mode?', 'value' => true
+            'label' => 'Verwenden Testmodus?', 'value' => true
         ));
         $form->setElement('textarea', 'hypercharge_channels', array(
-            'label' => 'Hypercharge channels',
+            'label' => 'Hypercharge Kanal',
             'description' => 'Hypercharge channels, one per line, with the 
                 channel elements in the order 
                 channel_currency, channel_login, channel_password, channel_id. 
@@ -188,46 +189,46 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             'value' => 'eg. USD,76876dfca7a,fa223bcaaa,ab55332299f7a'
         ));
         /*$form->setElement('text', 'hypercharge_ttl', array(
-            'label' => 'Transaction TTL',
+            'label' => 'Transaktion TTL',
             'description' => 'Time To Live of the transaction, in minutes',
             'value' => 5
         ));*/
         $form->setElement('select', 'hypercharge_layout', array(
-            'label' => 'Page layout for the payment process',
+            'label' => 'Seiten-Layout des Zahlungsvorgangs',
             'required' => true,
             'value' => 'iFrame',
             'store' => array(array('iFrame', 'Integration der Bezahlseite via iFrame'), array('Redirect', 'Weiterleitung zu Hypercharge'))
         ));
         $form->setElement('numberfield', 'iFrameHeight', array(
-            'label' => 'iFrame Height',
+            'label' => 'iFrame H&ouml;he',
             'value' => '720'
         ));
         $form->setElement('numberfield', 'iFrameWidth', array(
-            'label' => 'iFrame Width',
+            'label' => 'iFrame Breite',
             'value' => '959'
         ));
         $form->setElement('combo', 'credit_card_types', array(
-            'label' => 'Credit Card Types',
+            'label' => 'Kreditkartentypen',
             'required' => true,
             'multiSelect' => true,
             'store' => $this->getCardTypes()
         ));
         $form->setElement('checkbox', 'editable_by_user', array(
-            'label' => 'Allow the user to edit the billing address',
+            'label' => 'Editieren der Rechnungsadresse durch den Nutzer zulassen',
             'value' => false
         ));
         $form->setElement('combo', 'payolution_countries', array(
-            'label' => 'Allow Purchase On Account - Payolution for Austria and Switzerland',
+            'label' => 'Rechnungskauf f&uuml;r &Ouml;sterreich und Schweiz',
             'required' => false,
             'multiSelect' => true,
             'store' => $this->getCountries()
         ));
         $form->setElement('text', 'agree_link', array(
-            'label' => 'My consent link',
+            'label' => 'Meine Einwilligung Link',
             'value' => ''
         ));
         $form->setElement('checkbox', 'hypercharge_logging', array(
-            'label' => 'Enable logging',
+            'label' => 'Ausgabe von Logdateien',
             'value' => false
         ));
     }
@@ -239,18 +240,18 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
     public function createTranslations() {
         $form = $this->Form();
         $translations = array(
-            'de_DE' => array(
-                'hypercharge_test' => 'Verwenden Testmodus?',
-                'hypercharge_channels' => 'Hypercharge Kanal',
-                'hypercharge_ttl' => 'Transaktion TTL',
-                'credit_card_types' => 'Kreditkartentypen',
-                'hypercharge_logging' => 'Ausgabe von Logdateien',
-                'hypercharge_layout' => 'Seiten-Layout des Zahlungsvorgangs',
-                'iFrameHeight' => 'iFrame H&ouml;he',
-                'iFrameWidth' => 'iFrame Breite',
-                'editable_by_user' => 'Editieren der Rechnungsadresse durch den Nutzer zulassen',
-                'payolution_countries' => 'Rechnungskauf f&uuml;r &Ouml;sterreich und Schweiz',
-                'agree_link' => 'Meine Einwilligung Link'
+            'en_GB' => array(
+                'hypercharge_test' => 'Use test mode?',
+                'hypercharge_channels' => 'Hypercharge channels',
+                //'hypercharge_ttl' => 'Transaction TTL',
+                'credit_card_types' => 'Credit Card Types',
+                'hypercharge_logging' => 'Enable logging',
+                'hypercharge_layout' => 'Page layout for the payment process',
+                'iFrameHeight' => 'iFrame Height',
+                'iFrameWidth' => 'iFrame Width',
+                'editable_by_user' => 'Allow the user to edit the billing address',
+                'payolution_countries' => 'Allow Purchase On Account - Payolution for Austria and Switzerland',
+                'agree_link' => 'My consent link'
             )
         );
         $shopRepository = Shopware()->Models()
@@ -397,9 +398,16 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             $view->nfxAllowedCountry = $isAllowedCountry;
             $view->nfxAgreeText = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_pa')->get('AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.');
             $view->nfxAgreeText = str_replace('href=""', 'href="' . $this->Config()->agree_link . '"', $view->nfxAgreeText);
-            $view->nfxPayolutionBirthdayDay = Shopware()->Session()->nfxPayolutionBirthdayDay;
-            $view->nfxPayolutionBirthdayMonth = Shopware()->Session()->nfxPayolutionBirthdayMonth;
-            $view->nfxPayolutionBirthdayYear = Shopware()->Session()->nfxPayolutionBirthdayYear;
+            if(isset(Shopware()->Session()->nfxPayolutionBirthdayDay)){
+                $view->nfxPayolutionBirthdayDay = Shopware()->Session()->nfxPayolutionBirthdayDay;
+                $view->nfxPayolutionBirthdayMonth = Shopware()->Session()->nfxPayolutionBirthdayMonth;
+                $view->nfxPayolutionBirthdayYear = Shopware()->Session()->nfxPayolutionBirthdayYear;
+            } else{
+                $birthday = $view->sUserData["billingaddress"]["birthday"];
+                if($birthday){
+                    list($view->nfxPayolutionBirthdayYear, $view->nfxPayolutionBirthdayMonth, $view->nfxPayolutionBirthdayDay) = explode("-", $birthday);
+                }
+            }
             $view->nfxPayolutionAgree = Shopware()->Session()->nfxPayolutionAgree;
             $view->nfxAGBMsg = Shopware()->Snippets()->getNamespace('frontend/checkout/confirm')->get('ConfirmErrorAGB', 'Bitte bestätigen Sie unsere AGB');
         }
@@ -713,7 +721,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.6";
+        return "2.0.7";
     }
 
     /**

@@ -71,6 +71,21 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 return;
             }
             //continue for WPF
+            $nfxLastAPICall = 0;
+            $session = Shopware()->Session();
+            if(isset($session->nfxLastAPICall)){
+                $nfxLastAPICall = $session->nfxLastAPICall;
+            }
+            $session->nfxLastAPICall = time();
+            $diff = $session->nfxLastAPICall - $nfxLastAPICall;
+            $plugin->logAction("Last call $diff \n");
+            if($diff <= 5){
+                $message = "Double click.\n";
+                $plugin->logAction($message);
+                //throw new Enlight_Controller_Exception($message);
+                exit();
+            }
+            //no double click => ok
             // Get currency, to be able to find channel
             $currency = $this->getCurrencyShortName();
             $channel = $this->getChannelByCurrency($currency);
