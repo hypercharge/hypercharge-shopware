@@ -22,6 +22,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
 
     /**
      * Performs the necessary installation steps
+     * @version 2.0.8 / send shipping address for "Purchase on Account" / 2014-08-13 //todo - it doesn't work
      * @return boolean
      */
     public function install() {

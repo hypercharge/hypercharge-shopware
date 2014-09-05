@@ -1,4 +1,5 @@
 <?php
+
 /**
  * HyperchargePaymentWpf
  *
@@ -73,13 +74,13 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             //continue for WPF
             $nfxLastAPICall = 0;
             $session = Shopware()->Session();
-            if(isset($session->nfxLastAPICall)){
+            if (isset($session->nfxLastAPICall)) {
                 $nfxLastAPICall = $session->nfxLastAPICall;
             }
             $session->nfxLastAPICall = time();
             $diff = $session->nfxLastAPICall - $nfxLastAPICall;
             $plugin->logAction("Last call $diff \n");
-            if($diff <= 5){
+            if ($diff <= 5) {
                 $message = "Double click.\n";
                 $plugin->logAction($message);
                 //throw new Enlight_Controller_Exception($message);
@@ -155,8 +156,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 'billing_address' => array(
                     'first_name' => $user['billingaddress']['firstname'],
                     'last_name' => $user['billingaddress']['lastname'],
-                    'address1' => $user['billingaddress']['street'] . ' '
-                    . $user['billingaddress']['streetnumber'],
+                    'address1' => $user['billingaddress']['street'] . ' ' . $user['billingaddress']['streetnumber'],
                     'city' => $user['billingaddress']['city'],
                     'zip_code' => $user['billingaddress']['zipcode'],
                     'country' => $user['additional']['country']['countryiso']
@@ -167,6 +167,31 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             $paymentData['billing_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['billing_address']);
             $paymentData['transaction_types'] = $paymentMethods;
+            if ($payment_name == "hyperchargewpf_pa") {
+                //purchase on account
+                /*if ($user['billingaddress']["company"]) {
+                    //B2B
+                    $paymentData["company_name"] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $user['billingaddress']["company"]);
+                }
+                //shipping address
+                $paymentData['shipping_address'] = array(
+                    'first_name' => $user['shippingaddress']['firstname'],
+                    'last_name' => $user['shippingaddress']['lastname'],
+                    'address1' => $user['shippingaddress']['street'] . ' ' . $user['shippingaddress']['streetnumber'],
+                    'city' => $user['shippingaddress']['city'],
+                    'zip_code' => $user['shippingaddress']['zipcode'],
+                    'country' => $user['additional']['countryShipping']['countryiso']
+                );
+                if (in_array($paymentData['shipping_address']['country'], array('US', 'CA')))
+                    $paymentData['shipping_address']['state'] = $user['additional']['stateShipping']['shortcode'];
+                $paymentData['shipping_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['shipping_address']);
+                //birthday
+                if ($user['billingaddress']['birthday']) {
+                    $paymentData['risk params'] = array(
+                        'birthday' => $user['billingaddress']['birthday']
+                    );
+                }*/
+            }
 
             /* if (ctype_digit($config->hypercharge_ttl) && ($ttl = $config->hypercharge_ttl * 60) >= 300 && $ttl <= 86400)
               $paymentData['ttl'] = $ttl;
@@ -322,14 +347,14 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 exit();
             }
             $paymentH = $notification->getPayment();
-            
-            if($paymentH->isError() && $paymentH->error->status_code){
+
+            if ($paymentH->isError() && $paymentH->error->status_code) {
                 $message = "ERROR: " . $paymentH->error->status_code . ": " . $paymentH->error->message . ' - ' . $paymentH->error->technical_message;
                 $plugin->logAction($message);
                 exit();
             }
             $plugin->logAction("payment OK");
-            
+
             // Find the transaction
             $trn = explode('---', $paymentH->transaction_id);
             list($transactionId, $paymentId) = explode(' ', $trn[0]);
@@ -381,7 +406,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     break;
             }
             if (null === $newStatus) {
-                $plugin->logAction('Undefined transaction status: '. $paymentH->status);
+                $plugin->logAction('Undefined transaction status: ' . $paymentH->status);
                 exit();
             }
 
@@ -407,13 +432,13 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             $session = Shopware()->Session();
             $session->offsetUnset("nfxErrorMessage");
             $nfxLastAPICall = 0;
-            if(isset($session->nfxLastAPICall)){
+            if (isset($session->nfxLastAPICall)) {
                 $nfxLastAPICall = $session->nfxLastAPICall;
             }
             $session->nfxLastAPICall = time();
             $diff = $session->nfxLastAPICall - $nfxLastAPICall;
             $plugin->logAction("Last call $diff \n");
-            if($diff <= 5){
+            if ($diff <= 5) {
                 $message = "Double click.\n";
                 $plugin->logAction($message);
                 throw new Enlight_Controller_Exception($message);
@@ -423,19 +448,19 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             $initial_encoding = mb_internal_encoding();
             $request = $this->Request();
             $router = $this->Front()->Router();
-            
+
             $payolution = $request->getParam('payolution');
-            if($payolution){
-                if($payolution["birthday_day"]){
+            if ($payolution) {
+                if ($payolution["birthday_day"]) {
                     $session->nfxPayolutionBirthdayDay = $payolution["birthday_day"];
                 }
-                if($payolution["birthday_month"]){
+                if ($payolution["birthday_month"]) {
                     $session->nfxPayolutionBirthdayMonth = $payolution["birthday_month"];
                 }
-                if($payolution["birthday_year"]){
+                if ($payolution["birthday_year"]) {
                     $session->nfxPayolutionBirthdayYear = $payolution["birthday_year"];
                 }
-                if($payolution["agree"]){
+                if ($payolution["agree"]) {
                     $session->nfxPayolutionAgree = $payolution["agree"];
                 }
             }
@@ -494,15 +519,15 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             if (in_array($paymentData['billing_address']['country'], array('US', 'CA')))
                 $paymentData['billing_address']['state'] = $user['additional']['state']['shortcode'];
             $paymentData['billing_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['billing_address']);
-            if($payment_name == "hyperchargemobile_pa"){
-                if($user['billingaddress']["company"]){
+            if ($payment_name == "hyperchargemobile_pa") {
+                if ($user['billingaddress']["company"]) {
                     //B2B
                     //$paymentData["company_name"] = $user['billingaddress']["company"];
                 }
             }
             $plugin->logAction("$payment_name started. Payment data\n"
                     . print_r($paymentData, true));
-            
+
             mb_internal_encoding("ISO-8859-1");
             // create the mobile payment session
             $paymentH = Hypercharge\Payment::mobile($paymentData);
@@ -518,7 +543,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             Shopware()->Session()->nfxUniquePaymentID = $uniquePaymentId;
             Shopware()->Session()->nfxTransactionID = $transactionId;
-            
+
             echo json_encode(array(
                 "success" => true,
                 "redirect_url" => $paymentH->redirect_url,
@@ -538,7 +563,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             } else {
                 $message = $ex->getMessage();
             }
-            Shopware()->Session()->nfxErrorMessage=$message;
+            Shopware()->Session()->nfxErrorMessage = $message;
             echo json_encode(array(
                 "success" => false
             ));
@@ -608,10 +633,10 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
      * @return type
      */
     public static function normalizeExport($val) {
-        if(mb_detect_encoding($val, "UTF-8")){
+        if (mb_detect_encoding($val, "UTF-8")) {
             return $val;
         }
-        return iconv(mb_internal_encoding(),'utf-8',$val);
+        return iconv(mb_internal_encoding(), 'utf-8', $val);
     }
 
     /**
