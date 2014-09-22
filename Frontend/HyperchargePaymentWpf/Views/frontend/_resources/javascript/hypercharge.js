@@ -15,11 +15,11 @@
             //this is not a Hypercharge payment method
             return true;
         }
-        if(checked_method.attr('id').substring(0, 14) == "hyperchargewpf"){
+        if (checked_method.attr('id').substring(0, 14) == "hyperchargewpf") {
             //WPF
             if (agb.attr('id') != undefined) {
                 //if AGB is not check we let SHopware validation
-                if(agb.prop('checked') == false){
+                if (agb.prop('checked') == false) {
                     return true;
                 }
                 if (nfxAPICall == 1) {
@@ -27,7 +27,7 @@
                 }
                 nfxAPICall = 1;
             }
-            
+
             return true;
         }
         //Mobile
@@ -37,7 +37,7 @@
         }
         if (agb.attr('id') != undefined) {
             //we want to validate AGB before sending data to Hypercharge
-            if(agb.prop('checked') == false){
+            if (agb.prop('checked') == false) {
                 alert(checked_method.parents('.hyperchargedata').find("input[name='nfxAGBMsg']").val());
                 return false;
             }
@@ -74,7 +74,7 @@
             birthday['day'] = ('00' + birthday['day']).slice(-2);
             json += "\"risk_params\":{\"birthday\":\"" + birthday['year'] + "-" + birthday['month'] + "-" + birthday['day'] + "\"},";
             var agree = checked_method.find("#agree");
-            if(agree.attr('id') != undefined){
+            if (agree.attr('id') != undefined) {
                 json2 += "\"" + agree.attr('id') + "\" : \"" + $(agree).val() + "\"";
             }
         }
@@ -83,7 +83,7 @@
 
         var data = jQuery.parseJSON(json);
         var data2 = jQuery.parseJSON(json2);
-        
+
         //submit 1 to Hypercharge via Shopware
         shopware_redirect_url = checked_method.find('#hyperchargemobile_shopware_redirect').val();
         shopware_failed_redirect_url = checked_method.find('#hyperchargemobile_shopware_failed_redirect').val();
@@ -128,18 +128,35 @@
             type: 'POST',
             crossDomain: true,
             data: data,
-            dataType: 'jsonp xml',
+            dataType: "xml",
+            headers: { 
+                'origin': this.headerOrigin 
+            },
             success: function(result) {
                 //$('#confirm .actions input').attr("disabled", "");
-                window.location.href = successUrl;
+                try{
+                    var status = $(result).find("status").text();
+                    /*var msg = $(result).find("message").text();
+                    if($(result).find("message").text() != $(result).find("technical_message").text()){
+                        msg += $(result).find("technical_message").text();
+                    }*/
+                    if((status == 'approved') || (status == 'pending') || (status == 'pending_async')){
+                        window.location.href = successUrl;
+                    } else {
+                        window.location.href = errorUrl;
+                    }
+                }catch(e){
+                    window.location.href = errorUrl;
+                }
                 return true;
             },
             error: function(jqXHR, tranStatus, errorThrown) {
                 //$('#confirm .actions input').attr("disabled", "");
                 if (jqXHR.status == 200) {
                     //window.location.href = successUrl;
-                    //we will not do the redirection to success action anymore because we need to submit the current form (for AGB)
-                    $('#confirm .actions input').parents("form").submit();
+                    ////we will not do the redirection to success action anymore because we need to submit the current form (for AGB)
+                    //$('#confirm .actions input').parents("form").submit();//this is not valid anymore
+                    window.location.href = errorUrl;
                     return;
                 } else {
                     alert(errorThrown.message);

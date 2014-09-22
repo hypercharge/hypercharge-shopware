@@ -7,7 +7,6 @@ require 'json'
 require 'json-schema'
 require 'types_specs'
 
-
 class FixtureInvalidError < StandardError
 end
 

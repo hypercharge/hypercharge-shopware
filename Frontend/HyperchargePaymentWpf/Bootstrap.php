@@ -17,12 +17,12 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.5 / add Purchase On Account - Payolution / 2014-07-22
  * @version 2.0.6 / validate AGB check / 2014-08-08
  * @version 2.0.7 / avoid double click for WPF too + get client's birthday as default value + fix update() issue / 2014-08-11
+ * @version 2.0.8 / send shipping address for "Purchase on Account" + change Mobile call fron jsonp to regular AJAX / 2014-09-15
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
     /**
      * Performs the necessary installation steps
-     * @version 2.0.8 / send shipping address for "Purchase on Account" / 2014-08-13 //todo - it doesn't work
      * @return boolean
      */
     public function install() {
@@ -672,7 +672,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
 
                         $filedate = date('Y-m-d', filemtime($filename));
                         $diff = (strtotime($now) - strtotime($filedate)) / (60 * 60 * 24); //it will count no. of days
-
+                        $days = 30;
                         if ($diff > $days) {
                             unlink($filename);
                         }
@@ -722,7 +722,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.7";
+        return "2.0.8";
     }
 
     /**

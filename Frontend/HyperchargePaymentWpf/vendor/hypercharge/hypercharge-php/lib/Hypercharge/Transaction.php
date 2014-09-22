@@ -17,12 +17,15 @@ class Transaction implements IResponse {
 
 	public $unique_id;
 	public $transaction_type;
+	// alias $transaction_type
+	public $type;
 	public $error = null;
 	public $redirect_url = null;
 
 	function __construct($p) {
 		Helper::assign($this, $p);
 
+		$this->type = $this->transaction_type;
 		$this->error = Errors\errorFromResponseHash($p);
 		unset($this->code);
 		unset($this->message);
@@ -93,9 +96,11 @@ class Transaction implements IResponse {
 
 	function __toString() {
 		return get_class()
-			." { type: "         .@$this->transaction_type
+			." { type: "         .@$this->type
 			.", unique_id: "     .@$this->unique_id
 			.", status: "        .@$this->status
+			.", currency: "      .@$this->currency
+			.", amount: "        .@$this->amount
 			.", transaction_id: ".@$this->transaction_id
 			.", timestamp: "     .@$this->timestamp
 			.", error: "         .@$this->error
@@ -262,6 +267,36 @@ class Transaction implements IResponse {
 	* @return Hypercharge\Transaction
 	* @throws Hypercharge\Errors\Error if no transaction created on hypercharge server
 	*/
+	static function sepa_debit_sale($channelToken, $request) {
+		return self::_call('sepa_debit_sale', $request, $channelToken);
+	}
+
+	/**
+	* @param string $channelToken
+	* @param mixed $request array or Hypercharge\TransactionRequest
+	* @return Hypercharge\Transaction
+	* @throws Hypercharge\Errors\Error if no transaction created on hypercharge server
+	*/
+	static function init_recurring_sepa_debit_sale($channelToken, $request) {
+		return self::_call('init_recurring_sepa_debit_sale', $request, $channelToken);
+	}
+
+	/**
+	* @param string $channelToken
+	* @param mixed $request array or Hypercharge\TransactionRequest
+	* @return Hypercharge\Transaction
+	* @throws Hypercharge\Errors\Error if no transaction created on hypercharge server
+	*/
+	static function init_recurring_sepa_debit_authorize($channelToken, $request) {
+		return self::_call('init_recurring_sepa_debit_authorize', $request, $channelToken);
+	}
+
+	/**
+	* @param string $channelToken
+	* @param mixed $request array or Hypercharge\TransactionRequest
+	* @return Hypercharge\Transaction
+	* @throws Hypercharge\Errors\Error if no transaction created on hypercharge server
+	*/
 	static function giro_pay_sale($channelToken, $request) {
 		return self::_call('giro_pay_sale', $request, $channelToken);
 	}
@@ -326,6 +361,16 @@ class Transaction implements IResponse {
 	*/
 	static function recurring_debit_sale($channelToken, $request) {
 		return self::_call('recurring_debit_sale', $request, $channelToken);
+	}
+
+	/**
+	* @param string $channelToken
+	* @param mixed $request array or Hypercharge\TransactionRequest
+	* @return Hypercharge\Transaction
+	* @throws Hypercharge\Errors\Error if no transaction created on hypercharge server
+	*/
+	static function recurring_sepa_debit_sale($channelToken, $request) {
+		return self::_call('recurring_sepa_debit_sale', $request, $channelToken);
 	}
 
 	/**

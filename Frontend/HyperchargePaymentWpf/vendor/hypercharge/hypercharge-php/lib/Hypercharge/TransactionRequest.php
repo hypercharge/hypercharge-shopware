@@ -16,7 +16,9 @@ class TransactionRequest implements IRequest {
       ,'ideal_sale'
       ,'referenced_fund_transfer'
       ,'debit_sale'
-      //,'sepa_debit'
+      ,'sepa_debit_sale'
+      ,'init_recurring_sepa_debit_sale'
+      ,'init_recurring_sepa_debit_authorize'
       ,'direct_pay24_sale'
       ,'giro_pay_sale'
       ,'pay_safe_card_sale'
@@ -29,6 +31,7 @@ class TransactionRequest implements IRequest {
       ,'init_recurring_debit_sale'
       ,'init_recurring_debit_authorize'
       ,'recurring_debit_sale'
+      ,'recurring_sepa_debit_sale'
       //,'barzahlen_sale'
     );
 
@@ -47,6 +50,11 @@ class TransactionRequest implements IRequest {
 	function setBillingAddress(Address $a) {
 		$this->billing_address = $a;
 	}
+
+  function setShippingAddress(Address $a) {
+    $this->shipping_address = $a;
+  }
+
 	function setRiskParams(RiskParams $r) {
 		$this->risk_params = $r;
 	}

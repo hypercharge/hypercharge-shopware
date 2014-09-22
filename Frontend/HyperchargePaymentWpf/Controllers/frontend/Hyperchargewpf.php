@@ -169,9 +169,9 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             $paymentData['transaction_types'] = $paymentMethods;
             if ($payment_name == "hyperchargewpf_pa") {
                 //purchase on account
-                /*if ($user['billingaddress']["company"]) {
+                if ($user['billingaddress']["company"]) {
                     //B2B
-                    $paymentData["company_name"] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $user['billingaddress']["company"]);
+                    //$paymentData["company_name"] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $user['billingaddress']["company"]);
                 }
                 //shipping address
                 $paymentData['shipping_address'] = array(
@@ -186,8 +186,8 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     $paymentData['shipping_address']['state'] = $user['additional']['stateShipping']['shortcode'];
                 $paymentData['shipping_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['shipping_address']);
                 //birthday
-                if ($user['billingaddress']['birthday']) {
-                    $paymentData['risk params'] = array(
+                /*if ($user['billingaddress']['birthday']) {
+                    $paymentData['risk_params'] = array(
                         'birthday' => $user['billingaddress']['birthday']
                     );
                 }*/
@@ -397,6 +397,8 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 case 'refunded':
                 case 'chargebacked':
                 case 'voided':
+                case 'error':
+                case 'rejected':
                     $newStatus = 35;
                 case 'pending':
                 case 'pending_async':

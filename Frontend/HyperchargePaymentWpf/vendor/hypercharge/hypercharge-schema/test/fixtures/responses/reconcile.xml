@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<payment_response>
+  <transaction_type>sale</transaction_type>
+  <status>approved</status>
+  <unique_id>61c06cf0a03d01307dde542696cde09d</unique_id>
+  <transaction_id>YourId---51a868de76def</transaction_id>
+  <technical_message>TESTMODE: No real money will be transferred!</technical_message>
+  <message>TESTMODE: No real money will be transferred!</message>
+  <mode>test</mode>
+  <timestamp>2013-05-31T09:08:18Z</timestamp>
+  <descriptor>sankyu.com/bogus +49123456789</descriptor>
+  <amount>1700</amount>
+  <currency>EUR</currency>
+</payment_response>

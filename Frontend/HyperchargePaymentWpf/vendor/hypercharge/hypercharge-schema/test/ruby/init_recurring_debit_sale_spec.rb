@@ -15,13 +15,18 @@ describe 'InitRecurringDebitSale JSON Schema' do
   spec_attribute 'currency'
 
   spec_attribute 'wire_reference_id'
-  spec_attribute 'bank_account_holder'
-  spec_attribute 'bank_account_number'
-  spec_attribute 'bank_number'
+  spec_attribute 'bank_account_holder', required: true
+  spec_attribute 'bank_account_number', required: false
+  spec_attribute 'bank_number'        , required: false
+  spec_attribute 'iban'               , required: false
+  spec_attribute 'bic'                , required: false
+  spec_attribute 'sepa_mandate_id'    , required: false
+  spec_attribute 'sepa_mandate_signature_date', required: false, spec: 'date'
 
   spec_attribute 'customer_email', required: true
   spec_attribute 'customer_phone'
   spec_attribute 'billing_address', required: true
+  spec_attribute 'shipping_address', spec: 'billing_address'
   spec_attribute 'risk_params'
   spec_attribute 'recurring_schedule'
 end

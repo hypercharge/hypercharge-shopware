@@ -19,7 +19,7 @@ class TransactionTest extends HyperchargeTestCase {
 	function testToString() {
 		$t = new Transaction($this->response('debit_sale.xml'));
 		$this->assertEqual($t.''
-			,'Hypercharge\Transaction { type: debit_sale, unique_id: 5e2cbbad71d2b13432323153c208223a, status: approved, transaction_id: 119643250547501c79d8295, timestamp: 2007-11-30T14:21:48Z, error: }');
+			,'Hypercharge\Transaction { type: debit_sale, unique_id: 5e2cbbad71d2b13432323153c208223a, status: approved, currency: USD, amount: 9000, transaction_id: 119643250547501c79d8295, timestamp: 2007-11-30T14:21:48Z, error: }');
 	}
 
 	function testStatusHelper() {
@@ -167,14 +167,19 @@ class TransactionTest extends HyperchargeTestCase {
 			,'create_rejected_debit_sale.xml'
 			,'create_retrieval_request.xml'
 			,'debit_sale.xml'
+			,'sepa_debit_sale.xml'
+			,'sepa_debit_sale.xml'
 			,'init_recurring_authorize.xml'
 			,'init_recurring_debit_authorize.xml'
 			,'init_recurring_debit_sale.xml'
+			,'init_recurring_sepa_debit_authorize.xml'
+			,'init_recurring_sepa_debit_sale.xml'
 			,'init_recurring_sale.xml'
 			,'pay_in_advance.xml'
 			,'payment_on_delivery.xml'
 			,'purchase_on_account.xml'
 			,'recurring_debit_sale.xml'
+			,'recurring_sepa_debit_sale.xml'
 			,'referenced_fund_transfer.xml'
 			,'refund.xml'
 			,'sale.xml'
@@ -230,6 +235,48 @@ class TransactionTest extends HyperchargeTestCase {
 		$t = new Transaction($r);
 		$this->assertFalse($t->isPersistentInHypercharge());
 		$this->assertTrue($t->isFatalError());
+	}
+
+	function testFind() {
+		XmlSerializer::$sort = false;
+
+		$requestXml  = $this->schemaRequest( 'reconcile.xml');
+		$responseXml = $this->schemaResponse('reconcile.xml');
+
+		$this->curlMock()
+			->shouldReceive('xmlPost')
+			->with('https://test.hypercharge.net/reconcile/CHANNEL_TOKEN', $requestXml)
+			->once()
+			->andReturn($responseXml);
+
+		$trx = Transaction::find('CHANNEL_TOKEN',  '61c06cf0a03d01307dde542696cde09d');
+		$this->assertIsA($trx, 'Hypercharge\Transaction');
+		$this->assertEqual($trx->unique_id, '61c06cf0a03d01307dde542696cde09d');
+		$this->assertTrue($trx->isApproved());
+		$this->assertEqual($trx->amount, 1700);
+		$this->assertEqual($trx->currency, 'EUR');
+		$this->assertEqual($trx->transaction_id, 'YourId---51a868de76def');
+	}
+
+	function testFindNotFound() {
+		XmlSerializer::$sort = false;
+
+		$requestXml  = $this->schemaRequest( 'reconcile.xml');
+		$responseXml = $this->schemaResponse('reconcile_not_found.xml');
+
+		$this->curlMock()
+			->shouldReceive('xmlPost')
+			->with('https://test.hypercharge.net/reconcile/CHANNEL_TOKEN', $requestXml)
+			->once()
+			->andReturn($responseXml);
+
+
+		$trx =Transaction::find('CHANNEL_TOKEN',  '61c06cf0a03d01307dde542696cde09d');
+		$this->assertTrue($trx->isFatalError());
+		$err = $trx->error;
+		$this->assertIsA($err, 'Hypercharge\Errors\TransactionNotFoundError');
+		$this->assertEqual($err->status_code, 460);
+		$this->assertEqual($err->technical_message, 'Transaction not found!');
 	}
 
 	function testEachWithSingleResult() {

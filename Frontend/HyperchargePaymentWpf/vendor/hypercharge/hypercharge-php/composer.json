@@ -2,7 +2,7 @@
 	"name":"hypercharge/hypercharge-php",
 	"description":"Hypercharge PHP Library / SDK",
 	"keywords": ["hypercharge", "payment", "api", "sdk"],
-	"hompage":"http://hypercharge.net",
+	"hompage":"https://secure.sankyu.com/integration",
 	"license":"MIT",
 	"authors": [
 		{
@@ -27,4 +27,13 @@
 		"classmap": ["lib/Hypercharge/"]
 		,"files": ["lib/Hypercharge/errors.php"]
 	}
+
+
+	,"___minimum-stability":"dev"
+	,"___repositories": [
+		{
+			"type": "vcs",
+			"url" : "/Users/janmentzel/work/hypercharge/hypercharge-schema"
+		}
+	]
 }
