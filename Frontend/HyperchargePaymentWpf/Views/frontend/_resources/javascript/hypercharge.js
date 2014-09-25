@@ -141,8 +141,18 @@
                         msg += $(result).find("technical_message").text();
                     }*/
                     if((status == 'approved') || (status == 'pending') || (status == 'pending_async')){
+                        if(successUrl.indexOf("?") > -1){
+                            successUrl = successUrl + "&status=" + status;
+                        } else {
+                            successUrl = successUrl + "?status=" + status;
+                        }
                         window.location.href = successUrl;
                     } else {
+                        if(errorUrl.indexOf("?") > -1){
+                            errorUrl = errorUrl + "&status=" + status;
+                        } else {
+                            errorUrl = errorUrl + "?status=" + status;
+                        }
                         window.location.href = errorUrl;
                     }
                 }catch(e){

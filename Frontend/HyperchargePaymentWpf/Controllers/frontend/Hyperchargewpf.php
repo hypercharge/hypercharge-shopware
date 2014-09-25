@@ -186,11 +186,11 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     $paymentData['shipping_address']['state'] = $user['additional']['stateShipping']['shortcode'];
                 $paymentData['shipping_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['shipping_address']);
                 //birthday
-                /*if ($user['billingaddress']['birthday']) {
-                    $paymentData['risk_params'] = array(
-                        'birthday' => $user['billingaddress']['birthday']
-                    );
-                }*/
+                /* if ($user['billingaddress']['birthday']) {
+                  $paymentData['risk_params'] = array(
+                  'birthday' => $user['billingaddress']['birthday']
+                  );
+                  } */
             }
 
             /* if (ctype_digit($config->hypercharge_ttl) && ($ttl = $config->hypercharge_ttl * 60) >= 300 && $ttl <= 86400)
@@ -275,6 +275,11 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayYear");
         Shopware()->Session()->offsetUnset("nfxPayolutionAgree");
         $request = $this->Request();
+        $plugin = $this->Plugin();
+        $plugin->logAction("SUCCESS:");
+        foreach($request->getParams() as $key => $value) {
+            $plugin->logAction("\t$key => $value");
+        }
         $this->saveOrder($request->getParam('transactionID'), $request->getParam('uniquePaymentID'), null, true);
         $this->redirect(array('controller' => 'checkout',
             'action' => 'finish',
@@ -312,6 +317,11 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         $request = $this->Request();
         $this->View()->nfxErrorMessage = Shopware()->Session()->nfxErrorMessage;
         Shopware()->Session()->offsetUnset('nfxErrorMessage');
+        $plugin = $this->Plugin();
+        $plugin->logAction("FAILED:");
+        foreach($request->getParams() as $key => $value) {
+            $plugin->logAction("\t$key => $value");
+        }
     }
 
     /**
