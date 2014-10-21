@@ -505,7 +505,10 @@ class TypesSpecs
         'giro_pay_sale', 'pay_safe_card_sale', 'init_recurring_authorize',
         'purchase_on_account', 'pay_in_advance', 'deposit', 'payment_on_delivery',
         'pay_pal', 'init_recurring_debit_sale', 'init_recurring_debit_authorize',
-        'recurring_debit_sale', 'barzahlen_sale'].each do |tt|
+        'recurring_debit_sale', 'barzahlen_sale',
+        'gtd_sepa_debit_sale', 'init_recurring_gtd_sepa_debit_sale','init_recurring_sepa_debit_authorize',
+        'init_recurring_gtd_sepa_debit_authorize','gtd_purchase_on_account','recurring_gtd_sepa_debit_sale'
+        ].each do |tt|
           subject[root_key]['transaction_types'] = [tt]
           validate(schema_path, subject).must_equal true
       end
@@ -528,64 +531,64 @@ class TypesSpecs
   end
 
 
-    describe 'retries' do
-      it 'is optional' do
-        subject[root_key].delete('retries')
-        validate(schema_path, subject).must_equal true
-      end
+  describe 'retries' do
+    it 'is optional' do
+      subject[root_key].delete('retries')
+      validate(schema_path, subject).must_equal true
+    end
 
-      it 'wont be nil' do
-        subject[root_key]['retries'] = nil
-        validate(schema_path, subject).must_equal false
-      end
+    it 'wont be nil' do
+      subject[root_key]['retries'] = nil
+      validate(schema_path, subject).must_equal false
+    end
 
-      it 'must be an integer' do
-        subject[root_key]['retries'] = 'not an integer!'
-        validate(schema_path, subject).must_equal false
-      end
+    it 'must be an integer' do
+      subject[root_key]['retries'] = 'not an integer!'
+      validate(schema_path, subject).must_equal false
+    end
 
-      it 'wont be 0' do
-        subject[root_key]['retries'] = 0
-        validate(schema_path, subject).must_equal false
-      end
+    it 'wont be 0' do
+      subject[root_key]['retries'] = 0
+      validate(schema_path, subject).must_equal false
+    end
 
-      it 'must be postive' do
-        subject[root_key]['retries'] = -1
+    it 'must be postive' do
+      subject[root_key]['retries'] = -1
+      validate(schema_path, subject).must_equal false
+    end
+  end
+
+  describe 'risk_params' do
+    describe 'the object' do
+      it 'wont allow additionalProperties' do
+        subject[root_key]['risk_params']['notInSchema'] = 1
         validate(schema_path, subject).must_equal false
       end
     end
 
-    describe 'risk_params' do
-      describe 'the object' do
-        it 'wont allow additionalProperties' do
-          subject[root_key]['risk_params']['notInSchema'] = 1
-          validate(schema_path, subject).must_equal false
-        end
-      end
+    it 'is optional' do
+      subject[root_key].delete('risk_params')
+      validate(schema_path, subject).must_equal true
+    end
 
-      it 'is optional' do
-        subject[root_key].delete('risk_params')
+    it 'must allow the following known keys' do
+      ['ssn', 'mac_address', 'session_id', 'user_id', 'user_level',
+        'email', 'phone', 'remote_ip', 'serial_number', 'infocapture_token'].each do |tt|
+        subject[root_key]['risk_params'] = {tt => 'a string'}
         validate(schema_path, subject).must_equal true
       end
+    end
 
-      it 'must allow the following known keys' do
-        ['ssn', 'mac_address', 'session_id', 'user_id', 'user_level',
-          'email', 'phone', 'remote_ip', 'serial_number', 'infocapture_token'].each do |tt|
-            subject[root_key]['risk_params'] = {tt => 'a string'}
-            validate(schema_path, subject).must_equal true
-          end
-        end
-
-        it 'wont allow two keys in items' do
-          subject[root_key]['risk_params'] = [{'ssn' => 'a string', 'user_level' => '1'}]
-          validate(schema_path, subject).must_equal false
-        end
+    it 'wont allow two keys in items' do
+      subject[root_key]['risk_params'] = [{'ssn' => 'a string', 'user_level' => '1'}]
+      validate(schema_path, subject).must_equal false
+    end
 
 
-        it 'wont allow arbitrary keys in items' do
-          subject[root_key]['risk_params'] = {'NOPE' => 'a string'}
-          validate(schema_path, subject).must_equal false
-        end
+    it 'wont allow arbitrary keys in items' do
+      subject[root_key]['risk_params'] = {'NOPE' => 'a string'}
+      validate(schema_path, subject).must_equal false
+    end
 
     # TODO:
     # it 'wont allow empty object' do
@@ -604,6 +607,16 @@ class TypesSpecs
     end
 
   end
+
+  describe 'risk_params_birthday' do
+    it 'must allow birthday' do
+      sub = subject
+      subject {subject[root_key]['risk_params']}
+      MiniTest::Spec.spec_attribute 'birthday', spec: 'birth_date', required: required
+      subject {sub}
+    end
+  end
+
 
   describe 'recurring_schedule' do
     it 'is optional' do
@@ -1357,7 +1370,7 @@ class TypesSpecs
   describe 'birth_date' do
     it 'presence' do
       subject.delete(attr_name)
-      validate(schema_path, subject).must_equal !bank_account_number
+      validate(schema_path, subject).must_equal !required
     end
 
     it 'wont be empty' do

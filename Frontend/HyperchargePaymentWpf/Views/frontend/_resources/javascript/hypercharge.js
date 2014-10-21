@@ -47,7 +47,10 @@
         checked_method.find(field).each(function(index, item) {
             if (item.id.substring(0, 8) == "birthday") {//extra check for Purchase On Account
                 birthday[item.id.replace("birthday_", "")] = $(item).val();
-                json2 += "\"" + item.id + "\" : \"" + $(item).val() + "\",";
+                if(json2 != '{ "payolution": { '){
+                    json2 += ",";
+                }
+                json2 += "\"" + item.id + "\" : \"" + $(item).val() + "\"";
             } else if (item.id.substring(0, 16) == "shipping_address") {//extra check for Purchase On Account
                 shipping_address[item.id.replace("shipping_address_", "")] = $(item).val();
             } else {
@@ -75,7 +78,7 @@
             json += "\"risk_params\":{\"birthday\":\"" + birthday['year'] + "-" + birthday['month'] + "-" + birthday['day'] + "\"},";
             var agree = checked_method.find("#agree");
             if (agree.attr('id') != undefined) {
-                json2 += "\"" + agree.attr('id') + "\" : \"" + $(agree).val() + "\"";
+                json2 += ",\"" + agree.attr('id') + "\" : \"" + $(agree).val() + "\"";
             }
         }
         json += "\"payment_method\" : \"" + checked_method.attr('id').replace("hyperchargemobile-", "") + "\" } }";

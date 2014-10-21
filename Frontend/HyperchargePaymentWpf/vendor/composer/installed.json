@@ -70,17 +70,17 @@
     },
     {
         "name": "hypercharge/hypercharge-schema",
-        "version": "1.25.0",
-        "version_normalized": "1.25.0.0",
+        "version": "1.25.2",
+        "version_normalized": "1.25.2.0",
         "source": {
             "type": "git",
             "url": "https://github.com/hypercharge/hypercharge-schema.git",
-            "reference": "28bda7553dc4d16cc3e17eb55c7bda5bb8d4d9d0"
+            "reference": "5b69165b69aada1c0e99f3371d057bf8c03e71a9"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/hypercharge/hypercharge-schema/zipball/28bda7553dc4d16cc3e17eb55c7bda5bb8d4d9d0",
-            "reference": "28bda7553dc4d16cc3e17eb55c7bda5bb8d4d9d0",
+            "url": "https://api.github.com/repos/hypercharge/hypercharge-schema/zipball/5b69165b69aada1c0e99f3371d057bf8c03e71a9",
+            "reference": "5b69165b69aada1c0e99f3371d057bf8c03e71a9",
             "shasum": ""
         },
         "require": {
@@ -90,7 +90,7 @@
         "require-dev": {
             "simpletest/simpletest": "*"
         },
-        "time": "2014-08-27 10:14:27",
+        "time": "2014-10-09 13:31:49",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -125,17 +125,17 @@
     },
     {
         "name": "hypercharge/hypercharge-php",
-        "version": "1.25.4",
-        "version_normalized": "1.25.4.0",
+        "version": "1.25.5",
+        "version_normalized": "1.25.5.0",
         "source": {
             "type": "git",
             "url": "https://github.com/hypercharge/hypercharge-php.git",
-            "reference": "a26305ee37ff5e164c19cf6a4111a0dad80fff9e"
+            "reference": "fd3e091007148325b70f0b0761886125f78c5251"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/hypercharge/hypercharge-php/zipball/a26305ee37ff5e164c19cf6a4111a0dad80fff9e",
-            "reference": "a26305ee37ff5e164c19cf6a4111a0dad80fff9e",
+            "url": "https://api.github.com/repos/hypercharge/hypercharge-php/zipball/fd3e091007148325b70f0b0761886125f78c5251",
+            "reference": "fd3e091007148325b70f0b0761886125f78c5251",
             "shasum": ""
         },
         "require": {
@@ -150,7 +150,7 @@
             "mockery/mockery": "dev-master@dev",
             "simpletest/simpletest": "*"
         },
-        "time": "2014-08-27 11:29:05",
+        "time": "2014-09-19 17:51:12",
         "type": "library",
         "installation-source": "dist",
         "autoload": {

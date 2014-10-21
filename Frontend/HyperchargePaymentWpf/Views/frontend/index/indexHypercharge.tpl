@@ -3,7 +3,7 @@
 {/block}
 
 {block name="frontend_index_header_javascript" append}
-<script src="{link file='frontend/_resources/javascript/hypercharge.js'}?version=20140923"></script>
+<script src="{link file='frontend/_resources/javascript/hypercharge.js'}?version=20141021"></script>
 <script src="{link file='frontend/_resources/javascript/validation.js'}"></script>
 <script language="JavaScript"></script>
 {/block}

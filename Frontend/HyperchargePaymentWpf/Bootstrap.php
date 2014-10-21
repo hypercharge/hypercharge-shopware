@@ -18,6 +18,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.6 / validate AGB check / 2014-08-08
  * @version 2.0.7 / avoid double click for WPF too + get client's birthday as default value + fix update() issue / 2014-08-11
  * @version 2.0.8 / send shipping address for "Purchase on Account" + change Mobile call fron jsonp to regular AJAX / 2014-09-15
+ * @version 2.0.9 / add GtdSepaDebitSale + GtdPurchaseOnAccount + add risk_params to Purchase On Account / 2014-10-08
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -60,9 +61,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         /*if($version <= "2.0.0"){
             $this->createSnippets("",true);
         }*/
-        if($version < "2.0.5"){
+        /*if($version < "2.0.5"){
             $this->createSnippets();
-        }
+        }*/
+        $this->createSnippets();
         
         /*$available_payments = $this->getAvailablePaymentMethods();
 
@@ -251,7 +253,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'iFrameHeight' => 'iFrame Height',
                 'iFrameWidth' => 'iFrame Width',
                 'editable_by_user' => 'Allow the user to edit the billing address',
-                'payolution_countries' => 'Allow Purchase On Account - Payolution for Austria and Switzerland',
+                'payolution_countries' => 'Allow Purchase On Account for Austria and Switzerland',
                 'agree_link' => 'My consent link'
             )
         );
@@ -397,7 +399,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             $view->nfxLang = Shopware()->Locale()->getLanguage();
             $view->nfxSameAddress = $isSameAddress;
             $view->nfxAllowedCountry = $isAllowedCountry;
-            $view->nfxAgreeText = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_pa')->get('AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.');
+            $view->nfxAgreeText = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp')->get('AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.');
             $view->nfxAgreeText = str_replace('href=""', 'href="' . $this->Config()->agree_link . '"', $view->nfxAgreeText);
             if(isset(Shopware()->Session()->nfxPayolutionBirthdayDay)){
                 $view->nfxPayolutionBirthdayDay = Shopware()->Session()->nfxPayolutionBirthdayDay;
@@ -411,6 +413,8 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             }
             $view->nfxPayolutionAgree = Shopware()->Session()->nfxPayolutionAgree;
             $view->nfxAGBMsg = Shopware()->Snippets()->getNamespace('frontend/checkout/confirm')->get('ConfirmErrorAGB', 'Bitte bestätigen Sie unsere AGB');
+            $view->nfxSepaMandateId = date("Ymdhis", time()) . "a" . rand(0,32000)*rand(0,32000);
+            $view->nfxSepaMandateSignatureDate = date("Y-m-d");
         }
         if ($controller == "checkout" || $controller == "account") {
             if(!$isAllowedCountry){
@@ -418,7 +422,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 $payments = $view->Template()->getTemplateVars($paymentsVar);
                 $new_payments = array();
                 foreach($payments as $payment){
-                    if($payment["name"] != "hyperchargemobile_pa"){
+                    if($payment["name"] != "hyperchargemobile_pa" && $payment["name"] != "hyperchargemobile_gp"){
                         $new_payments[] = $payment;
                     }
                 }
@@ -458,7 +462,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                     "en" => "Credit Card",
                     "de" => "Kreditkarte"
                 ),
-            //"hypercharge_trx" => "sale",
+                "hypercharge_trx" => "sale",
                 "logos" => array("visa.png", "mastercard.png", "jcb.png", "diners.png", "amex.png")
             ),
             array(
@@ -467,7 +471,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                     "en" => "Direct Debit",
                     "de" => "Lastschrift"
                 ),
-            //"hypercharge_trx" => "debit_sale"
+                "hypercharge_trx" => "debit_sale"
             ),
             array(
                 "name" => "hyperchargewpf_pp",
@@ -498,9 +502,26 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             array(
                 "name" => "hyperchargemobile_pa",
                 "description" => array(
-                    "en" => "Purchase On Account - Payolution",
+                    "en" => "Purchase On Account",
                     "de" => "Rechnungskauf via Payolution"
-                )
+                ),
+                "hypercharge_trx" => "purchase_on_account"
+            ),
+            array(
+                "name" => "hyperchargemobile_gp",
+                "description" => array(
+                    "en" => "GTD Purchase On Account",
+                    "de" => "GTD Purchase On Account"
+                ),
+                "hypercharge_trx" => "gtd_purchase_on_account"
+            ),
+            array(
+                "name" => "hyperchargemobile_gd",
+                "description" => array(
+                    "en" => "GTD Sepa Debit Sale",
+                    "de" => "GTD Sepa Debit Sale"
+                ),
+                "hypercharge_trx" => "gtd_sepa_debit_sale"
             ),
             array(
                 "name" => "hyperchargewpf_dp",
@@ -682,7 +703,13 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             }
             //log the message
             if ($handle = fopen($logfile, 'a+')) {
-                fwrite($handle, "[" . date(DATE_RFC822) . "] " . $message . "\r\n");
+                $sessionid = "";
+                try{
+                    $sessionid = Shopware()->SessionID();
+                } catch (Exception $ex) {
+
+                }
+                fwrite($handle, "[" . date(DATE_RFC822) . "] (" . $sessionid . ") " . $message . "\r\n");
                 fclose($handle);
             }
         }
@@ -722,7 +749,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.8";
+        return "2.0.9";
     }
 
     /**

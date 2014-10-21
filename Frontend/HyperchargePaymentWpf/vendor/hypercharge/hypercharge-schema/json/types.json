@@ -255,6 +255,12 @@
     "minimum": 1,
     "exclusiveMinimum": false
   },
+  "birth_date":{
+    "description":"Date of format 'YYYY-MM-DD' years 19xx and 20xx e.g. '1956-12-30'",
+    "type":"string",
+    "pattern":"^(19|20)\\d{2}-(0|1)\\d-(0|1|2|3)\\d$"
+  },
+
   "risk_params" : {
     "description" : "set of risk params as described in the Advanced risk management with RiskParams section",
     "type" : "object",
@@ -311,9 +317,17 @@
         "maxLength": 128
       },
       "birthday":{
-        "description":"Date of format 'YYYY-MM-DD' years 19xx and 20xx e.g. '1956-12-30'",
-        "type":"string",
-        "pattern":"^(19|20)\\d{2}-(0|1)\\d-(0|1|2|3)\\d$"
+        "extends":"types.json#/birth_date"
+      }
+    }
+  },
+  "risk_params_birthday_only" : {
+    "description" : "risk params with birthday only",
+    "type" : "object",
+    "additionalProperties": false,
+    "properties":{
+      "birthday":{
+        "extends":"types.json#/birth_date"
       }
     }
   },
@@ -396,7 +410,13 @@
       "giro_pay_sale", "pay_safe_card_sale", "init_recurring_authorize",
       "purchase_on_account", "pay_in_advance", "deposit", "payment_on_delivery",
       "pay_pal", "init_recurring_debit_sale", "init_recurring_debit_authorize",
-      "recurring_debit_sale", "barzahlen_sale"]
+      "recurring_debit_sale", "barzahlen_sale",
+      "gtd_sepa_debit_sale",
+      "init_recurring_gtd_sepa_debit_sale",
+      "init_recurring_sepa_debit_authorize",
+      "init_recurring_gtd_sepa_debit_authorize",
+      "gtd_purchase_on_account",
+      "recurring_gtd_sepa_debit_sale"]
     }
   },
   "page": {

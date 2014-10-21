@@ -186,11 +186,11 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     $paymentData['shipping_address']['state'] = $user['additional']['stateShipping']['shortcode'];
                 $paymentData['shipping_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['shipping_address']);
                 //birthday
-                /* if ($user['billingaddress']['birthday']) {
-                  $paymentData['risk_params'] = array(
-                  'birthday' => $user['billingaddress']['birthday']
-                  );
-                  } */
+                if ($user['billingaddress']['birthday'] && $user['billingaddress']['birthday'] != "0000-00-00") {
+                    $paymentData['risk_params'] = array(
+                        'birthday' => $user['billingaddress']['birthday']
+                    );
+                }
             }
 
             /* if (ctype_digit($config->hypercharge_ttl) && ($ttl = $config->hypercharge_ttl * 60) >= 300 && $ttl <= 86400)
@@ -277,7 +277,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         $request = $this->Request();
         $plugin = $this->Plugin();
         $plugin->logAction("SUCCESS:");
-        foreach($request->getParams() as $key => $value) {
+        foreach ($request->getParams() as $key => $value) {
             $plugin->logAction("\t$key => $value");
         }
         $this->saveOrder($request->getParam('transactionID'), $request->getParam('uniquePaymentID'), null, true);
@@ -319,7 +319,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         Shopware()->Session()->offsetUnset('nfxErrorMessage');
         $plugin = $this->Plugin();
         $plugin->logAction("FAILED:");
-        foreach($request->getParams() as $key => $value) {
+        foreach ($request->getParams() as $key => $value) {
             $plugin->logAction("\t$key => $value");
         }
     }
@@ -537,6 +537,22 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     //$paymentData["company_name"] = $user['billingaddress']["company"];
                 }
             }
+            $pm = $plugin->getAvailablePaymentMethods();
+            $paymentMethods = array();
+            foreach ($pm as $p) {
+                if ($p["name"] == $payment_name) {
+                    $paymentMethods[] = $p["hypercharge_trx"];
+                    break;
+                }
+            }
+            if (empty($paymentMethods)) {
+                $plugin->logAction("Payment methods not supplied\n");
+                throw new Enlight_Controller_Exception(
+                'Payment methods not supplied');
+                exit();
+            }
+            $paymentData['transaction_types'] = $paymentMethods;
+
             $plugin->logAction("$payment_name started. Payment data\n"
                     . print_r($paymentData, true));
 
