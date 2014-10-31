@@ -20,6 +20,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.8 / send shipping address for "Purchase on Account" + change Mobile call fron jsonp to regular AJAX / 2014-09-15
  * @version 2.0.9 / add GtdSepaDebitSale + GtdPurchaseOnAccount + add risk_params to Purchase On Account / 2014-10-08
  * @version 2.0.10 / add birthday validation as an option / 2014-10-28
+ * @version 2.1.0 / fine tuning and polishing / 2014-10-28
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -762,7 +763,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.10";
+        return "2.1.0";
     }
 
     /**
