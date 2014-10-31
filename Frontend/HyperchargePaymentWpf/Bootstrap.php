@@ -19,6 +19,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.7 / avoid double click for WPF too + get client's birthday as default value + fix update() issue / 2014-08-11
  * @version 2.0.8 / send shipping address for "Purchase on Account" + change Mobile call fron jsonp to regular AJAX / 2014-09-15
  * @version 2.0.9 / add GtdSepaDebitSale + GtdPurchaseOnAccount + add risk_params to Purchase On Account / 2014-10-08
+ * @version 2.0.10 / add birthday validation as an option / 2014-10-28
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -230,6 +231,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             'label' => 'Meine Einwilligung Link',
             'value' => ''
         ));
+        $form->setElement('checkbox', 'birthday_validation', array(
+            'label' => 'Validierung Geburtstag',
+            'value' => true
+        ));
         $form->setElement('checkbox', 'hypercharge_logging', array(
             'label' => 'Ausgabe von Logdateien',
             'value' => false
@@ -242,6 +247,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      */
     public function createTranslations() {
         $form = $this->Form();
+        
+        Shopware()->Db()->query("DELETE FROM s_core_config_element_translations WHERE element_id IN (SELECT id FROM s_core_config_elements WHERE form_id = ?)"
+                , array($form->getId()));
+        
         $translations = array(
             'en_GB' => array(
                 'hypercharge_test' => 'Use test mode?',
@@ -254,21 +263,24 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'iFrameWidth' => 'iFrame Width',
                 'editable_by_user' => 'Allow the user to edit the billing address',
                 'payolution_countries' => 'Allow Purchase On Account for Austria and Switzerland',
-                'agree_link' => 'My consent link'
+                'agree_link' => 'My consent link',
+                'birthday_validation' => 'Purchase on Account Birthday Validation'
             )
         );
-        $shopRepository = Shopware()->Models()
-                ->getRepository('\Shopware\Models\Shop\Locale');
+        $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
+
         foreach ($translations as $locale => $snippets) {
-            $localeModel = $shopRepository->findOneBy(array(
-                'locale' => $locale
-            ));
+            $localeModel = $shopRepository->findOneBy(array('locale' => $locale));
+
             foreach ($snippets as $element => $snippet) {
                 if ($localeModel === null)
                     continue;
+                
                 $elementModel = $form->getElement($element);
+
                 if ($elementModel === null)
                     continue;
+
                 $translationModel = new \Shopware\Models\Config\ElementTranslation();
                 $translationModel->setLabel($snippet);
                 $translationModel->setLocale($localeModel);
@@ -411,6 +423,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                     list($view->nfxPayolutionBirthdayYear, $view->nfxPayolutionBirthdayMonth, $view->nfxPayolutionBirthdayDay) = explode("-", $birthday);
                 }
             }
+            $view->nfxBirthdayValidation = ($this->Config()->birthday_validation) ? "birthday":"";
             $view->nfxPayolutionAgree = Shopware()->Session()->nfxPayolutionAgree;
             $view->nfxAGBMsg = Shopware()->Snippets()->getNamespace('frontend/checkout/confirm')->get('ConfirmErrorAGB', 'Bitte bestätigen Sie unsere AGB');
             $view->nfxSepaMandateId = date("Ymdhis", time()) . "a" . rand(0,32000)*rand(0,32000);
@@ -749,7 +762,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.0.9";
+        return "2.0.10";
     }
 
     /**

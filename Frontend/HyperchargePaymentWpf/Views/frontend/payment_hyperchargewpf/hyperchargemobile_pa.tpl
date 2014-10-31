@@ -32,7 +32,7 @@
                 {/for}
             </select>
             {assign var=thisyear value=$smarty.now|date_format:"%Y"}
-            <select id="birthday_year" class="year hyperchargemobile-purchase_on_account-field" autocomplete="off" validation="required birthday date">
+            <select id="birthday_year" class="year hyperchargemobile-purchase_on_account-field" autocomplete="off" validation="required date {$nfxBirthdayValidation}">
                 {for $year=$thisyear to 1900 step=-1}
                     <option value="{$year}" {if $year == $nfxPayolutionBirthdayYear}selected{/if}>{$year}</option>
                 {/for}

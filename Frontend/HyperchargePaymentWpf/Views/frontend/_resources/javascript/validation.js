@@ -338,17 +338,19 @@
                 //attr["disabled"] = field.attr("disabled");
                 //attr["required_group_ok"] = field.attr("required_group_ok");
                 //attr["interval_ok"] = field.attr("interval_ok");
-                if (!rule.check(attr)) {
-                    //field.addClass("errorbox");
-                    //container.addClass("error");
-                    var lang = field.parents('.hypercharge').parents('.hyperchargedata').find("input[name='nfxLang']").val(),
-                            msg = eval("messages[rule.msg]." + lang);
+                if(rule != undefined){
+                    if (!rule.check(attr)) {
+                        //field.addClass("errorbox");
+                        //container.addClass("error");
+                        var lang = field.parents('.hypercharge').parents('.hyperchargedata').find("input[name='nfxLang']").val(),
+                                msg = eval("messages[rule.msg]." + lang);
 
-                    if (msg == undefined) {
-                        msg = messages[rule.msg].de;
+                        if (msg == undefined) {
+                            msg = messages[rule.msg].de;
+                        }
+
+                        errors.push(msg);
                     }
-
-                    errors.push(msg);
                 }
             }
 
