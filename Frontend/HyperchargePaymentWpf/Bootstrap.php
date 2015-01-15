@@ -21,6 +21,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.9 / add GtdSepaDebitSale + GtdPurchaseOnAccount + add risk_params to Purchase On Account / 2014-10-08
  * @version 2.0.10 / add birthday validation as an option / 2014-10-28
  * @version 2.1.0 / fine tuning and polishing / 2014-10-28
+ * @version 2.1.1 / do not enable the Payments anymore on enable() + remove UTF8 charset / 2014-12-12
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -110,10 +111,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return boolean
      */
     public function enable() {
-        $payments = $this->HyperchargePayments();
+        /*$payments = $this->HyperchargePayments();
         foreach ($payments as $payment) {
             $payment->setActive(true);
-        }
+        }*/
         return parent::enable();
     }
 

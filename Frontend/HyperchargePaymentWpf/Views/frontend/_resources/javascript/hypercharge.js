@@ -132,6 +132,7 @@
             crossDomain: true,
             data: data,
             dataType: "xml",
+            //contentType: "charset=UTF-8",
             headers: { 
                 'origin': this.headerOrigin 
             },
@@ -139,10 +140,10 @@
                 //$('#confirm .actions input').attr("disabled", "");
                 try{
                     var status = $(result).find("status").text();
-                    /*var msg = $(result).find("message").text();
+                    var msg = $(result).find("message").text();
                     if($(result).find("message").text() != $(result).find("technical_message").text()){
-                        msg += $(result).find("technical_message").text();
-                    }*/
+                        msg += " (" + $(result).find("technical_message").text() + ")";
+                    }
                     if((status == 'approved') || (status == 'pending') || (status == 'pending_async')){
                         if(successUrl.indexOf("?") > -1){
                             successUrl = successUrl + "&status=" + status;
@@ -152,9 +153,9 @@
                         window.location.href = successUrl;
                     } else {
                         if(errorUrl.indexOf("?") > -1){
-                            errorUrl = errorUrl + "&status=" + status;
+                            errorUrl = errorUrl + "&status=" + status + "&msg=" + msg;
                         } else {
-                            errorUrl = errorUrl + "?status=" + status;
+                            errorUrl = errorUrl + "?status=" + status + "&msg=" + msg;
                         }
                         window.location.href = errorUrl;
                     }
@@ -172,7 +173,7 @@
                     window.location.href = errorUrl;
                     return;
                 } else {
-                    alert(errorThrown.message);
+                    //alert(jqXHR.responseText);
                     window.location.href = errorUrl;
                     return;
                 }
