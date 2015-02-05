@@ -15,6 +15,25 @@
         <input type="text" id="sepa_mandate_id" class="hyperchargemobile-sepa_direct_debit-field" value="{$nfxSepaMandateId}" style="display:none"/>
         <input type="text" id="sepa_mandate_signature_date" class="hyperchargemobile-sepa_direct_debit-field" value="{$nfxSepaMandateSignatureDate}" style="display:none"/>
     </p>
+    <p class="none">
+            <label for="birthday_day">{s name=Birthday namespace="HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd"}Date of Birth*:{/s}</label>
+            <select id="birthday_day" class="day hyperchargemobile-sepa_direct_debit-field" autocomplete="off" validation="required">
+                {for $day=1 to 31}
+                    <option value="{$day}" {if $day == $nfxPayolutionBirthdayDay}selected{/if}>{$day}</option>
+                {/for}
+            </select>
+            <select id="birthday_month" class="month hyperchargemobile-sepa_direct_debit-field" autocomplete="off" validation="required">
+                {for $month=1 to 12}
+                    <option value="{$month}" {if $month == $nfxPayolutionBirthdayMonth}selected{/if}>{$month}</option>
+                {/for}
+            </select>
+            {assign var=thisyear value=$smarty.now|date_format:"%Y"}
+            <select id="birthday_year" class="year hyperchargemobile-sepa_direct_debit-field" autocomplete="off" validation="required date {$nfxBirthdayValidation}">
+                {for $year=$thisyear to 1900 step=-1}
+                    <option value="{$year}" {if $year == $nfxPayolutionBirthdayYear}selected{/if}>{$year}</option>
+                {/for}
+            </select>
+        </p>
     <input type="hidden" value="{$shopware_redirect}" id="hyperchargemobile_shopware_redirect"/>
     <input type="hidden" value="{$shopware_failed_redirect}" id="hyperchargemobile_shopware_failed_redirect"/>
 </div>

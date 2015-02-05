@@ -22,6 +22,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.0.10 / add birthday validation as an option / 2014-10-28
  * @version 2.1.0 / fine tuning and polishing / 2014-10-28
  * @version 2.1.1 / do not enable the Payments anymore on enable() + remove UTF8 charset / 2014-12-12
+ * @version 2.1.2 / add birthday to GTD Sepa Debit Sale + add WPF Kreditkarte payment method + set default option Redirect + fix checkout for redirect / 2015-01-21
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -61,33 +62,33 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $this->createEvents();
         $this->createForm();
         $this->createTranslations();
-        /*if($version <= "2.0.0"){
-            $this->createSnippets("",true);
-        }*/
-        /*if($version < "2.0.5"){
-            $this->createSnippets();
-        }*/
+        /* if($version <= "2.0.0"){
+          $this->createSnippets("",true);
+          } */
+        /* if($version < "2.0.5"){
+          $this->createSnippets();
+          } */
         $this->createSnippets();
-        
-        /*$available_payments = $this->getAvailablePaymentMethods();
 
-        foreach ($available_payments as $item) {
-            $payment = $this->Payments()->findOneBy(
-                    array('name' => $item["name"])
-            );
-            if ($payment) {
-                $additionalDescription = "";
-                foreach($item["logos"] as $image){
-                    $img = base64_encode(file_get_contents(dirname(__FILE__)
-                        . "/img/$image"));
-                    $additionalDescription .= '<img src="data:image/png;base64,' . $img . '" border="0" style="margin-right:3px;height:30px;"/>';
-                }
-                $sql = "update s_core_paymentmeans set additionalDescription = ? where name = ?";
-                Shopware()->Db()->query($sql, array($additionalDescription, $item["name"]));
-            }
-        }
+        /* $available_payments = $this->getAvailablePaymentMethods();
+
+          foreach ($available_payments as $item) {
+          $payment = $this->Payments()->findOneBy(
+          array('name' => $item["name"])
+          );
+          if ($payment) {
+          $additionalDescription = "";
+          foreach($item["logos"] as $image){
+          $img = base64_encode(file_get_contents(dirname(__FILE__)
+          . "/img/$image"));
+          $additionalDescription .= '<img src="data:image/png;base64,' . $img . '" border="0" style="margin-right:3px;height:30px;"/>';
+          }
+          $sql = "update s_core_paymentmeans set additionalDescription = ? where name = ?";
+          Shopware()->Db()->query($sql, array($additionalDescription, $item["name"]));
+          }
+          }
          */
-    
+
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
 
@@ -111,10 +112,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return boolean
      */
     public function enable() {
-        /*$payments = $this->HyperchargePayments();
-        foreach ($payments as $payment) {
-            $payment->setActive(true);
-        }*/
+        /* $payments = $this->HyperchargePayments();
+          foreach ($payments as $payment) {
+          $payment->setActive(true);
+          } */
         return parent::enable();
     }
 
@@ -154,9 +155,9 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                   to Hypercharge secure servers without the interference of merchant server.";
                   } */
                 $additionalDescription = "";
-                foreach($item["logos"] as $image){
+                foreach ($item["logos"] as $image) {
                     $img = base64_encode(file_get_contents(dirname(__FILE__)
-                        . "/img/$image"));
+                                    . "/img/$image"));
                     $additionalDescription .= '<img src="data:image/png;base64,' . $img . '" border="0" style="margin-right:3px;height:30px;"/>';
                 }
                 $this->createPayment(array(
@@ -194,15 +195,15 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 Channel elements must be separated by commas',
             'value' => 'eg. USD,76876dfca7a,fa223bcaaa,ab55332299f7a'
         ));
-        /*$form->setElement('text', 'hypercharge_ttl', array(
-            'label' => 'Transaktion TTL',
-            'description' => 'Time To Live of the transaction, in minutes',
-            'value' => 5
-        ));*/
+        /* $form->setElement('text', 'hypercharge_ttl', array(
+          'label' => 'Transaktion TTL',
+          'description' => 'Time To Live of the transaction, in minutes',
+          'value' => 5
+          )); */
         $form->setElement('select', 'hypercharge_layout', array(
             'label' => 'Seiten-Layout des Zahlungsvorgangs',
             'required' => true,
-            'value' => 'iFrame',
+            'value' => 'Redirect',
             'store' => array(array('iFrame', 'Integration der Bezahlseite via iFrame'), array('Redirect', 'Weiterleitung zu Hypercharge'))
         ));
         $form->setElement('numberfield', 'iFrameHeight', array(
@@ -249,10 +250,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      */
     public function createTranslations() {
         $form = $this->Form();
-        
+
         Shopware()->Db()->query("DELETE FROM s_core_config_element_translations WHERE element_id IN (SELECT id FROM s_core_config_elements WHERE form_id = ?)"
                 , array($form->getId()));
-        
+
         $translations = array(
             'en_GB' => array(
                 'hypercharge_test' => 'Use test mode?',
@@ -277,7 +278,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             foreach ($snippets as $element => $snippet) {
                 if ($localeModel === null)
                     continue;
-                
+
                 $elementModel = $form->getElement($element);
 
                 if ($elementModel === null)
@@ -290,11 +291,11 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             }
         }
     }
-    
+
     /**
      * Create the translation for payments: name + description
      */
-    public function createPaymentsTranslations(){
+    public function createPaymentsTranslations() {
         $result = Shopware()->Db()->fetchRow(
                 "
                     SELECT *
@@ -303,10 +304,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                         AND objectkey = 1
                         AND objectlanguage= 2
                 ");
-        if($result){
+        if ($result) {
             $translations = unserialize($result["objectdata"]);
             $action = "update";
-        }else{
+        } else {
             $translations = array();
             $action = "insert";
         }
@@ -316,14 +317,14 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             $payment = $this->Payments()->findOneBy(
                     array('name' => $method["name"])
             );
-            if(!array_key_exists($payment->getId(), $translations)){
+            if (!array_key_exists($payment->getId(), $translations)) {
                 //add EN translations for the new payment
                 $translations[$payment->getId()] = array(
                     "description" => $method["description"]["en"]
                 );
             }
         }
-        if($action == "update"){
+        if ($action == "update") {
             Shopware()->Db()->query("
                 UPDATE  s_core_translations
                 SET objectdata = ?
@@ -331,7 +332,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                             AND objectkey = 1
                             AND objectlanguage= 2
                 ", array(serialize($translations)));
-        }else{
+        } else {
             Shopware()->Db()->query("
                 INSERT INTO  s_core_translations(objecttype, objectdata, objectkey, objectlanguage)
                 VALUES('config_payment', ?, 1, 2)
@@ -382,12 +383,12 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         ) {
             return;
         }
-
         $view = $args->getSubject()->View();
+        
         Shopware()->Template()->addTemplateDir($this->Path() . 'Views/');
         $isSameAddress = $this->compareAddresses($view->sUserData);
         $isAllowedCountry = $this->isAllowedCountry($view->sUserData["billingaddress"]["countryID"]);
-        
+
         if ($controller != "account") {
             $view->extendsTemplate('frontend/index/indexHypercharge.tpl');
         }
@@ -398,7 +399,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'controller' => 'PaymentHyperchargewpf', 'action' => 'hypercharge_mobile', 'forceSecure' => true
             ));
             $view->shopware_failed_redirect = $router->assemble(array(
-                'controller' => 'PaymentHyperchargewpf','action' => 'failed', 'forceSecure' => true));
+                'controller' => 'PaymentHyperchargewpf', 'action' => 'failed', 'forceSecure' => true));
             $credit_card_types = array();
             $all_credit_card_types = $this->getCardTypes();
             $allowed_credit_card_types = $this->Config()->credit_card_types;
@@ -415,29 +416,29 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             $view->nfxAllowedCountry = $isAllowedCountry;
             $view->nfxAgreeText = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp')->get('AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.');
             $view->nfxAgreeText = str_replace('href=""', 'href="' . $this->Config()->agree_link . '"', $view->nfxAgreeText);
-            if(isset(Shopware()->Session()->nfxPayolutionBirthdayDay)){
+            if (isset(Shopware()->Session()->nfxPayolutionBirthdayDay)) {
                 $view->nfxPayolutionBirthdayDay = Shopware()->Session()->nfxPayolutionBirthdayDay;
                 $view->nfxPayolutionBirthdayMonth = Shopware()->Session()->nfxPayolutionBirthdayMonth;
                 $view->nfxPayolutionBirthdayYear = Shopware()->Session()->nfxPayolutionBirthdayYear;
-            } else{
+            } else {
                 $birthday = $view->sUserData["billingaddress"]["birthday"];
-                if($birthday){
+                if ($birthday) {
                     list($view->nfxPayolutionBirthdayYear, $view->nfxPayolutionBirthdayMonth, $view->nfxPayolutionBirthdayDay) = explode("-", $birthday);
                 }
             }
-            $view->nfxBirthdayValidation = ($this->Config()->birthday_validation) ? "birthday":"";
+            $view->nfxBirthdayValidation = ($this->Config()->birthday_validation) ? "birthday" : "";
             $view->nfxPayolutionAgree = Shopware()->Session()->nfxPayolutionAgree;
             $view->nfxAGBMsg = Shopware()->Snippets()->getNamespace('frontend/checkout/confirm')->get('ConfirmErrorAGB', 'Bitte bestätigen Sie unsere AGB');
-            $view->nfxSepaMandateId = date("Ymdhis", time()) . "a" . rand(0,32000)*rand(0,32000);
+            $view->nfxSepaMandateId = date("Ymdhis", time()) . "a" . rand(0, 32000) * rand(0, 32000);
             $view->nfxSepaMandateSignatureDate = date("Y-m-d");
         }
         if ($controller == "checkout" || $controller == "account") {
-            if(!$isAllowedCountry){
+            if (!$isAllowedCountry) {
                 $paymentsVar = ($controller == "checkout") ? "sPayments" : "sPaymentMeans";
                 $payments = $view->Template()->getTemplateVars($paymentsVar);
                 $new_payments = array();
-                foreach($payments as $payment){
-                    if($payment["name"] != "hyperchargemobile_pa" && $payment["name"] != "hyperchargemobile_gp"){
+                foreach ($payments as $payment) {
+                    if ($payment["name"] != "hyperchargemobile_pa" && $payment["name"] != "hyperchargemobile_gp") {
                         $new_payments[] = $payment;
                     }
                 }
@@ -476,6 +477,15 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 "description" => array(
                     "en" => "Credit Card",
                     "de" => "Kreditkarte"
+                ),
+                "hypercharge_trx" => "sale",
+                "logos" => array("visa.png", "mastercard.png", "jcb.png", "diners.png", "amex.png")
+            ),
+            array(
+                "name" => "hyperchargewpf_cc",
+                "description" => array(
+                    "en" => "Credit Card WPF",
+                    "de" => "Kreditkarte WPF"
                 ),
                 "hypercharge_trx" => "sale",
                 "logos" => array("visa.png", "mastercard.png", "jcb.png", "diners.png", "amex.png")
@@ -591,14 +601,14 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @param <type> $bRemove
      * @return <type>
      */
-    public function createSnippets($files = "", $bRemove = true){
-        if($bRemove)
+    public function createSnippets($files = "", $bRemove = true) {
+        if ($bRemove)
             $this->removeSnippets();
-        if(!$files){
+        if (!$files) {
             $files = array("shopware_de_utf8.sql", "shopware_en_utf8.sql");
         }
-        foreach($files as $file){
-            $langFile = dirname(__FILE__).'/build/'.$file;
+        foreach ($files as $file) {
+            $langFile = dirname(__FILE__) . '/build/' . $file;
             if (file_exists($langFile)) {
                 $sql = file_get_contents($langFile);
                 Shopware()->Db()->exec($sql);
@@ -606,16 +616,17 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         }
         //return true;
     }
+
     /**
      * Remove all the snippets for this plugin
      * @return <type>
      */
-    public function removeSnippets(){
+    public function removeSnippets() {
         $sql = 'DELETE FROM `s_core_snippets` WHERE `namespace` LIKE "HyperchargePaymentWpf/Views/%";';
         Shopware()->Db()->exec($sql);
         return true;
     }
-    
+
     /**
      * get accepted card types
      * @return type
@@ -630,7 +641,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             array("OT", (Shopware()->Locale()->getLanguage() == "de") ? "Andere" : "Other")
         );
     }
-    
+
     /**
      * get accepted countries for
      * @return type
@@ -646,47 +657,47 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * compare billing address vs shipping address
      * @param type $userData
      */
-    private function compareAddresses($userData){
+    private function compareAddresses($userData) {
         $billing = $userData["billingaddress"];
         $shipping = $userData["shippingaddress"];
-        if($billing["countryID"] == "0"){
+        if ($billing["countryID"] == "0") {
             $billing["countryID"] = "";
         }
-        if($shipping["countryID"] == "0"){
+        if ($shipping["countryID"] == "0") {
             $shipping["countryID"] = "";
         }
-        if($billing["stateID"] == "0"){
+        if ($billing["stateID"] == "0") {
             $billing["stateID"] = "";
         }
-        if($shipping["stateID"] == "0"){
+        if ($shipping["stateID"] == "0") {
             $shipping["stateID"] = "";
         }
-        return ($billing["company"] == $shipping["company"] && $billing["department"] == $shipping["department"] && 
-                $billing["salutation"] == $shipping["salutation"] && $billing["firstname"] == $shipping["firstname"] && 
-                $billing["lastname"] == $shipping["lastname"] && $billing["street"] == $shipping["street"] && 
-                $billing["streetnumber"] == $shipping["streetnumber"] && $billing["zipcode"] == $shipping["zipcode"] && 
-                $billing["city"] == $shipping["city"] && $billing["countryID"] == $shipping["countryID"] && 
+        return ($billing["company"] == $shipping["company"] && $billing["department"] == $shipping["department"] &&
+                $billing["salutation"] == $shipping["salutation"] && $billing["firstname"] == $shipping["firstname"] &&
+                $billing["lastname"] == $shipping["lastname"] && $billing["street"] == $shipping["street"] &&
+                $billing["streetnumber"] == $shipping["streetnumber"] && $billing["zipcode"] == $shipping["zipcode"] &&
+                $billing["city"] == $shipping["city"] && $billing["countryID"] == $shipping["countryID"] &&
                 $billing["stateID"] == $shipping["stateID"]);
     }
-    
+
     /**
      * check if it is DE (or AT, CH)
      * @param type $countryID
      * @return int
      */
-    private function isAllowedCountry($countryID){
+    private function isAllowedCountry($countryID) {
         $sql = "SELECT countryiso FROM s_core_countries WHERE id = ?";
         $country = Shopware()->Db()->fetchOne($sql, array($countryID));
-        if($country == "DE"){
+        if ($country == "DE") {
             return 1;
         }
         $allowed_countries = $this->Config()->payolution_countries;
-            for ($i = 0; $i < count($allowed_countries); $i++) {
-                if($allowed_countries[$i] == $country){
-                    return 1;
-                }
+        for ($i = 0; $i < count($allowed_countries); $i++) {
+            if ($allowed_countries[$i] == $country) {
+                return 1;
             }
-        
+        }
+
         return 0;
     }
 
@@ -719,10 +730,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             //log the message
             if ($handle = fopen($logfile, 'a+')) {
                 $sessionid = "";
-                try{
+                try {
                     $sessionid = Shopware()->SessionID();
                 } catch (Exception $ex) {
-
+                    
                 }
                 fwrite($handle, "[" . date(DATE_RFC822) . "] (" . $sessionid . ") " . $message . "\r\n");
                 fclose($handle);
@@ -764,7 +775,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.1.0";
+        return "2.1.2";
     }
 
     /**

@@ -137,6 +137,9 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     'nfxTarget' => urlencode($return_cancel_url),
                     'forceSecure' => true
                 ));
+            } else {
+                //this is added because the SDK crashes (createElement crashes for &)
+                $return_success_url = htmlentities($return_success_url);
             }
             $hyperchargeTransactionId = $transactionId . ' ' . $uniquePaymentId;
             $hyperchargeTransactionId = \Hypercharge\Helper::appendRandomId($hyperchargeTransactionId);
@@ -186,11 +189,17 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     $paymentData['shipping_address']['state'] = $user['additional']['stateShipping']['shortcode'];
                 $paymentData['shipping_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['shipping_address']);
                 //birthday
-                if ($user['billingaddress']['birthday'] && $user['billingaddress']['birthday'] != "0000-00-00") {
+                /*if ($user['billingaddress']['birthday'] && $user['billingaddress']['birthday'] != "0000-00-00") {
                     $paymentData['risk_params'] = array(
                         'birthday' => $user['billingaddress']['birthday']
                     );
-                }
+                }*/
+            }
+            //birthday
+            if ($user['billingaddress']['birthday'] && $user['billingaddress']['birthday'] != "0000-00-00") {
+                $paymentData['risk_params'] = array(
+                    'birthday' => $user['billingaddress']['birthday']
+                );
             }
 
             /* if (ctype_digit($config->hypercharge_ttl) && ($ttl = $config->hypercharge_ttl * 60) >= 300 && $ttl <= 86400)
@@ -283,7 +292,14 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         $this->saveOrder($request->getParam('transactionID'), $request->getParam('uniquePaymentID'), null, true);
         $this->redirect(array('controller' => 'checkout',
             'action' => 'finish',
-            'sUniqueID' => $request->getParam('uniquePaymentID')));
+            'sUniqueID' => $request->getParam('uniquePaymentID'),
+            'sAGB' => 1));
+        /*$this->forward("finish", "checkout", 'frontend', array(
+            'sUniqueID' => $request->getParam('uniquePaymentID'),
+            'sAGB' => 1,
+            'appendSession' => true,
+            'forceSecure' => true
+        ));*/
     }
 
     /**
@@ -292,6 +308,9 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
      * @return void 
      */
     public function cancelAction() {
+        $plugin = $this->Plugin();
+        $config = $plugin->Config();
+        $plugin->logAction("CANCEL");
         //return $this->redirect(array('controller' => 'checkout'));
         Shopware()->Session()->nfxErrorMessage = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/failed')->get("CancelledTransaction", "The transaction was cancelled by the user!");
         if ($config->hypercharge_layout == "Redirect") {
@@ -536,6 +555,18 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     //B2B
                     //$paymentData["company_name"] = $user['billingaddress']["company"];
                 }
+            }
+            //birthday
+            $birthday = "";
+            if ($payolution["birthday_day"] && $payolution["birthday_month"] && $payolution["birthday_year"]) {
+                $birthday = join("-", array($payolution["birthday_year"], str_pad($payolution["birthday_month"],2,"0",STR_PAD_LEFT), str_pad($payolution["birthday_day"],2,"0",STR_PAD_LEFT)));
+            } else {
+                $birthday = $user['billingaddress']['birthday'];
+            }
+            if ($birthday && $birthday != "0000-00-00") {
+                $paymentData['risk_params'] = array(
+                    'birthday' => $birthday
+                );
             }
             $pm = $plugin->getAvailablePaymentMethods();
             $paymentMethods = array();

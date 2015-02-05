@@ -35,6 +35,7 @@ INSERT INTO `s_core_snippets` (`namespace`, `shopID`, `localeID`, `name`, `value
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 1, 'BankAccountHolder', 'Kontoinhaber*:', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 1, 'IBAN', 'IBAN*:', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 1, 'BIC', 'BIC*:', NOW(), NOW()),
+('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 1, 'Birthday', 'Geburtsdatum*', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp', 1, 1, 'Birthday', 'Geburtsdatum*', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp', 1, 1, 'AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp', 1, 1, 'NotSameAddressesError', 'Für diese Zahlart dürfen Versandadresse und Lieferadresse nicht abweichen.', NOW(), NOW()),

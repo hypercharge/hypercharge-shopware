@@ -35,6 +35,7 @@ INSERT INTO `s_core_snippets` (`namespace`, `shopID`, `localeID`, `name`, `value
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 2, 'BankAccountHolder', 'Bank Account Holder*:', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 2, 'IBAN', 'IBAN*:', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 2, 'BIC', 'BIC*:', NOW(), NOW()),
+('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gd', 1, 2, 'Birthday', 'Date of Birth*', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp', 1, 2, 'Birthday', 'Date of Birth*', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp', 1, 2, 'AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.', NOW(), NOW()),
 ('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp', 1, 2, 'NotSameAddressesError', 'For this payment method the shipping address must be the same as billing address.', NOW(), NOW()),
