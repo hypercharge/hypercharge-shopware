@@ -1,14 +1,14 @@
 <!-- For new registering clients -->
 {block name='frontend_checkout_payment_fieldset_template' append}
     {if $payment_mean.name == "hyperchargemobile_cc" || $payment_mean.name == "hyperchargemobile_dd" || $payment_mean.name == "hyperchargemobile_pa" || $payment_mean.name == "hyperchargemobile_gd" || $payment_mean.name == "hyperchargemobile_gp"}
-        <div class="grid_10 hyperchargedata">
+        <div class="grid_10 hyperchargedata" payment_id="{$payment_mean.id}">
             {include file="frontend/payment_hyperchargewpf/{$payment_mean.name}.tpl"}
             <input type="hidden" value="{$nfxLang}" name="nfxLang"/>
             <input type="hidden" value="{$nfxAGBMsg}" name="nfxAGBMsg"/>
         </div>
-    {elseif $sUserData.additional.payment.name|substr:0:14 == "hyperchargewpf"}
-        <div class="grid_10 hyperchargedata">
-            <div class="hypercharge" id="{$sUserData.additional.payment.name}"></div>
+    {elseif $payment_mean.name|substr:0:14 == "hyperchargewpf"}
+        <div class="grid_10 hyperchargedata" payment_id="{$payment_mean.id}">
+            <div class="hypercharge" id="{$payment_mean.name}"></div>
         </div>
     {/if}
 {/block}
@@ -35,7 +35,7 @@
                         <input type="radio" name="register[payment]" class="radio auto_submit" value="{$sUserData.additional.payment.id}" id="payment_mean{$sUserData.additional.payment.id}" checked="checked" style="display: none;"/>
                         <!-- div class="space">&nbsp;</div -->
                         <div class="grid_10">
-                            <div class="hyperchargedata">
+                            <div class="hyperchargedata" payment_id="{$sUserData.additional.payment.id}">
                                 {include file="frontend/payment_hyperchargewpf/{$sUserData.additional.payment.name}.tpl"}
                                 <input type="hidden" value="{$nfxLang}" name="nfxLang"/>
                                 <input type="hidden" value="{$nfxAGBMsg}" name="nfxAGBMsg"/>
@@ -49,7 +49,7 @@
             <div class="grid_15 method">
                 <input type="radio" name="register[payment]" class="radio auto_submit" value="{$sUserData.additional.payment.id}" id="payment_mean{$sUserData.additional.payment.id}" checked="checked" style="display: none;"/>
                 <div class="grid_10">
-                    <div class="hyperchargedata">
+                    <div class="hyperchargedata" payment_id="{$sUserData.additional.payment.id}">
                         <div class="hypercharge" id="{$sUserData.additional.payment.name}"></div>
                     </div>
                 </div>

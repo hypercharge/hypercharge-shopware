@@ -212,7 +212,9 @@
         form.find("[validation]").each(function() {
             var field = $(this);
             //validate only the fields specific for the selected hypercharge method
-            if (field.parents('.hypercharge').parents('.hyperchargedata').parents('.method').find("input[name='register[payment]']:checked").attr('name') != undefined) {
+            var payment_id = field.parents('.hypercharge').parents('.hyperchargedata').attr("payment_id");
+            //if (field.parents('.hypercharge').parents('.hyperchargedata').parents('.method').find("input[name='register[payment]']:checked").attr('name') != undefined) {
+            if($("input[name='register[payment]'][value='"+payment_id+"']:checked").attr('name') != undefined){    
                 if (field.attr('validation') !== undefined) {
                     fields.push(new Field(field));
                 }

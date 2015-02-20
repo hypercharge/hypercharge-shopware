@@ -23,6 +23,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.1.0 / fine tuning and polishing / 2014-10-28
  * @version 2.1.1 / do not enable the Payments anymore on enable() + remove UTF8 charset / 2014-12-12
  * @version 2.1.2 / add birthday to GTD Sepa Debit Sale + add WPF Kreditkarte payment method + set default option Redirect + fix checkout for redirect / 2015-01-21
+ * @version 2.1.3 / some js and css changes for Connexco compatibility / 2015-02-05
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -775,7 +776,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.1.2";
+        return "2.1.3";
     }
 
     /**

@@ -1,13 +1,13 @@
-#confirm .personal-information .payment_method .hyperchargedata { left: 240px }
-#confirm .personal-information .payment_method .hyperchargedata label {
-    display: block;
-    float: left;
+/*#confirm .personal-information .payment_method */ .hyperchargedata { left: 240px }
+/*#confirm .personal-information .payment_method */ .hyperchargedata label {
+    display: inline-block;
+    /*float: left;*/
     width: 150px;
     padding-top: 6px;
 }
-#confirm .personal-information .payment_method .hyperchargedata .text { width: 315px }
-#confirm .personal-information .payment_method .hyperchargedata input#cvv { width:3em !important; }
-#confirm .personal-information .payment_method .hyperchargedata .cvv-what-is-this { 
+/*#confirm .personal-information .payment_method */ .hyperchargedata .text { width: 315px }
+/*#confirm .personal-information .payment_method */ .hyperchargedata input#cvv { width:3em !important; }
+/*#confirm .personal-information .payment_method */ .hyperchargedata .cvv-what-is-this { 
     font-size:11px; 
     cursor:help; 
     margin-left:10px; 
