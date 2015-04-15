@@ -150,7 +150,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 'amount' => (int) ($this->getAmount() * 100),
                 'currency' => $currency,
                 'customer_email' => $user['additional']['user']['email'],
-                'customer_phone' => $user['billingaddress']['phone'],
+                //'customer_phone' => $user['billingaddress']['phone'],
                 'notification_url' => $router->assemble(array('action' => 'notify',
                     'forceSecure' => true)),
                 'return_success_url' => $return_success_url,
@@ -165,6 +165,9 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     'country' => $user['additional']['country']['countryiso']
                 )
             );
+            if($user['billingaddress']['phone']){
+                $paymentData['customer_phone'] = $user['billingaddress']['phone'];
+            }
             if (in_array($paymentData['billing_address']['country'], array('US', 'CA')))
                 $paymentData['billing_address']['state'] = $user['additional']['state']['shortcode'];
 
@@ -534,7 +537,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 'amount' => (int) ($this->getAmount() * 100),
                 'currency' => $currency,
                 'customer_email' => $user['additional']['user']['email'],
-                'customer_phone' => $user['billingaddress']['phone'],
+                //'customer_phone' => $user['billingaddress']['phone'],
                 'notification_url' => $router->assemble(array('action' => 'notify',
                     'forceSecure' => true)),
                 'billing_address' => array(
@@ -547,6 +550,9 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     'country' => $user['additional']['country']['countryiso']
                 )
             );
+            if($user['billingaddress']['phone']){
+                $paymentData['customer_phone'] = $user['billingaddress']['phone'];
+            }
             if (in_array($paymentData['billing_address']['country'], array('US', 'CA')))
                 $paymentData['billing_address']['state'] = $user['additional']['state']['shortcode'];
             $paymentData['billing_address'] = array_map('Shopware_Controllers_Frontend_PaymentHyperchargeWpf::normalizeExport', $paymentData['billing_address']);
