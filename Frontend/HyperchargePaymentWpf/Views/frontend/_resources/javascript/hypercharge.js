@@ -2,7 +2,7 @@
     var nfxAPICall = 0;
 
     onSubmitForm = function(event) {
-        var  //checked_method = $("input[name='register[payment]']:checked").parents('.method').find('.hyperchargedata').children('.hypercharge'),
+        var //checked_method = $("input[name='register[payment]']:checked").parents('.method').find('.hyperchargedata').children('.hypercharge'),
                 checked_radio = $("input[name='register[payment]']:checked"), checked_method, form,
                 //form = $("input[name='register[payment]']:checked").parents('form'),
                 field, shopware_redirect_url, shopware_failed_redirect_url,
@@ -11,11 +11,11 @@
                 json2 = '{ "payolution": { ',
                 birthday = [], //extra check for Purchase On Account
                 shipping_address = [];//extra check for Purchase On Account
-                
+
         if (checked_radio.attr('id') == undefined) {
             return true;
         }
-        checked_method = $('.hyperchargedata[payment_id='+checked_radio.val()+']').children('.hypercharge');
+        checked_method = $('.hyperchargedata[payment_id=' + checked_radio.val() + ']').children('.hypercharge');
         if (checked_method.attr('id') == undefined) {
             //this is not a Hypercharge payment method
             return true;
@@ -28,6 +28,8 @@
                     return true;
                 }
                 if (nfxAPICall == 1) {
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
                     return false;//avoid double click
                 }
                 nfxAPICall = 1;
@@ -39,12 +41,16 @@
         //Mobile
         //validate mandatory fields
         if (!form.validation()) {
+            event.stopPropagation();
+            event.stopImmediatePropagation();
             return false;
         }
         if (agb.attr('id') != undefined) {
             //we want to validate AGB before sending data to Hypercharge
             if (agb.prop('checked') == false) {
                 alert(checked_method.parents('.hyperchargedata').find("input[name='nfxAGBMsg']").val());
+                event.stopPropagation();
+                event.stopImmediatePropagation();
                 return false;
             }
         }
@@ -53,7 +59,7 @@
         checked_method.find(field).each(function(index, item) {
             if (item.id.substring(0, 8) == "birthday") {//extra check for Purchase On Account
                 birthday[item.id.replace("birthday_", "")] = $(item).val();
-                if(json2 != '{ "payolution": { '){
+                if (json2 != '{ "payolution": { ') {
                     json2 += ",";
                 }
                 json2 += "\"" + item.id + "\" : \"" + $(item).val() + "\"";
@@ -97,7 +103,9 @@
         shopware_redirect_url = checked_method.find('#hyperchargemobile_shopware_redirect').val();
         shopware_failed_redirect_url = checked_method.find('#hyperchargemobile_shopware_failed_redirect').val();
         sendFormToShopware(shopware_redirect_url, shopware_failed_redirect_url, data, data2);
-
+        
+        event.stopPropagation();
+        event.stopImmediatePropagation();
         return false;
     }
 
@@ -139,33 +147,33 @@
             data: data,
             dataType: "xml",
             //contentType: "charset=UTF-8",
-            headers: { 
-                'origin': this.headerOrigin 
+            headers: {
+                'origin': this.headerOrigin
             },
             success: function(result) {
                 //$('#confirm .actions input').attr("disabled", "");
-                try{
+                try {
                     var status = $(result).find("status").text();
                     var msg = $(result).find("message").text();
-                    if($(result).find("message").text() != $(result).find("technical_message").text()){
+                    if ($(result).find("message").text() != $(result).find("technical_message").text()) {
                         msg += " (" + $(result).find("technical_message").text() + ")";
                     }
-                    if((status == 'approved') || (status == 'pending') || (status == 'pending_async')){
-                        if(successUrl.indexOf("?") > -1){
+                    if ((status == 'approved') || (status == 'pending') || (status == 'pending_async')) {
+                        if (successUrl.indexOf("?") > -1) {
                             successUrl = successUrl + "&status=" + status;
                         } else {
                             successUrl = successUrl + "?status=" + status;
                         }
                         window.location.href = successUrl;
                     } else {
-                        if(errorUrl.indexOf("?") > -1){
+                        if (errorUrl.indexOf("?") > -1) {
                             errorUrl = errorUrl + "&status=" + status + "&msg=" + msg;
                         } else {
                             errorUrl = errorUrl + "?status=" + status + "&msg=" + msg;
                         }
                         window.location.href = errorUrl;
                     }
-                }catch(e){
+                } catch (e) {
                     window.location.href = errorUrl;
                 }
                 return true;
@@ -186,26 +194,25 @@
             }
         });
     }
-
     $(document).ready(function() {
         //$('#confirm .actions input').bind('click', onSubmitForm);
         $('#basketButton').bind('click', onSubmitForm);
-
+        $('#basketButton').data('events').click.reverse();
         var payments = $("input[name='register[payment]']");
         for (var i = 0; i < payments.length; i++) {
             var pay = payments[i];
             /*if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').attr('id') == 'hyperchargemobile-purchase_on_account') {
-                if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').find("#not_allowed").attr("id") != undefined) {
-                    if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').find("#not_allowed").val() == 1) {
-                        $(pay).attr("disabled", "disabled");
-                    } else {
-                        $(pay).attr("disabled", "");
-                    }
-                }
-            }*/
-            if($('.hyperchargedata[payment_id='+$(pay).val()+']').children('.hypercharge').attr("id") == 'hyperchargemobile-purchase_on_account'){
-                if($('.hyperchargedata[payment_id='+$(pay).val()+']').children('.hypercharge').find("#not_allowed").attr("id") != undefined){
-                    if($('.hyperchargedata[payment_id='+$(pay).val()+']').children('.hypercharge').find("#not_allowed").val() == 1){
+             if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').find("#not_allowed").attr("id") != undefined) {
+             if ($(pay).parents('.method').find('.hyperchargedata').children('.hypercharge').find("#not_allowed").val() == 1) {
+             $(pay).attr("disabled", "disabled");
+             } else {
+             $(pay).attr("disabled", "");
+             }
+             }
+             }*/
+            if ($('.hyperchargedata[payment_id=' + $(pay).val() + ']').children('.hypercharge').attr("id") == 'hyperchargemobile-purchase_on_account') {
+                if ($('.hyperchargedata[payment_id=' + $(pay).val() + ']').children('.hypercharge').find("#not_allowed").attr("id") != undefined) {
+                    if ($('.hyperchargedata[payment_id=' + $(pay).val() + ']').children('.hypercharge').find("#not_allowed").val() == 1) {
                         $(pay).attr("disabled", "disabled");
                     } else {
                         $(pay).attr("disabled", "");
