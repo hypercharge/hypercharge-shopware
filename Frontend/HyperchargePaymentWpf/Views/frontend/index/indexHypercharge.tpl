@@ -4,6 +4,6 @@
 
 {block name="frontend_index_header_javascript" append}
 <script src="{link file='frontend/_resources/javascript/hypercharge.js'}?version=20150423"></script>
-<script src="{link file='frontend/_resources/javascript/validation.js'}?version=20150205"></script>
+<script src="{link file='frontend/_resources/javascript/validation.js'}?version=20150423"></script>
 <script language="JavaScript"></script>
 {/block}

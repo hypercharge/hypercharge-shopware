@@ -92,23 +92,6 @@
                 },
                 msg: 'expiration_date'
             },
-            expiration_date: {
-                check: function(attr) {
-                    if (!attr["val"] || !attr["expiration_month"])
-                        return true;
-
-                    var ccExpMonth = attr["expiration_month"];
-                    var ccExpYear = attr["val"];
-                    var currentTime = new Date();
-                    var currentMonth = currentTime.getMonth() + 1;
-                    var currentYear = currentTime.getFullYear();
-                    if (ccExpMonth < currentMonth && ccExpYear == currentYear) {
-                        return false;
-                    }
-                    return true;
-                },
-                msg: 'expiration_date'
-            },
             not_allowed: {
                 check: function(attr) {
                     if (attr["val"] == 1)
