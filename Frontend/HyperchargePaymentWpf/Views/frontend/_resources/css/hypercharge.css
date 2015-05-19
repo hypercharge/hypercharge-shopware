@@ -35,3 +35,8 @@
 /*body .outer-select {
 	width: 150px !important;
 }*/
+
+.hyperchargedata .outer-select, .hyperchargedata .inner-select {
+	width: auto !important;
+        min-width: 100px !important;
+}

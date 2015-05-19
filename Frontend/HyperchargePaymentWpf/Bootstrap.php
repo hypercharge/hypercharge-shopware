@@ -26,6 +26,7 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @version 2.1.3 / some js and css changes for Connexco compatibility / 2015-02-05
  * @version 2.1.4 / we don't send the customer phone in case is not set / 2015-04-14
  * @version 2.1.5 / Easy Checkout compatibility / 2015-04-23
+ * @version 2.1.6 / fix sAGB checkbox name + minor CSS change / 2015-05-12
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -778,7 +779,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public function getVersion() {
-        return "2.1.5";
+        return "2.1.6";
     }
 
     /**

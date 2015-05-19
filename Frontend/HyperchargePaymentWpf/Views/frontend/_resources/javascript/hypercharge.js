@@ -20,6 +20,9 @@
             //this is not a Hypercharge payment method
             return true;
         }
+        if (agb.attr('id') == undefined) {
+            agb = $("input:checkbox[name='sAGB']")
+        }
         if (checked_method.attr('id').substring(0, 14) == "hyperchargewpf") {
             //WPF
             if (agb.attr('id') != undefined) {
@@ -45,6 +48,7 @@
             event.stopImmediatePropagation();
             return false;
         }
+            
         if (agb.attr('id') != undefined) {
             //we want to validate AGB before sending data to Hypercharge
             if (agb.prop('checked') == false) {
