@@ -70,17 +70,17 @@
     },
     {
         "name": "hypercharge/hypercharge-schema",
-        "version": "1.25.2",
-        "version_normalized": "1.25.2.0",
+        "version": "1.25.3",
+        "version_normalized": "1.25.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/hypercharge/hypercharge-schema.git",
-            "reference": "5b69165b69aada1c0e99f3371d057bf8c03e71a9"
+            "reference": "e5b76e90778dfb3be3d83bb0b98ab77853fe4a06"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/hypercharge/hypercharge-schema/zipball/5b69165b69aada1c0e99f3371d057bf8c03e71a9",
-            "reference": "5b69165b69aada1c0e99f3371d057bf8c03e71a9",
+            "url": "https://api.github.com/repos/hypercharge/hypercharge-schema/zipball/e5b76e90778dfb3be3d83bb0b98ab77853fe4a06",
+            "reference": "e5b76e90778dfb3be3d83bb0b98ab77853fe4a06",
             "shasum": ""
         },
         "require": {
@@ -90,7 +90,7 @@
         "require-dev": {
             "simpletest/simpletest": "*"
         },
-        "time": "2014-10-09 13:31:49",
+        "time": "2015-02-03 12:11:11",
         "type": "library",
         "installation-source": "dist",
         "autoload": {

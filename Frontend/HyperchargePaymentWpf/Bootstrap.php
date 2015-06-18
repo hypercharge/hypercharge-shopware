@@ -602,6 +602,14 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 ),
                 "hypercharge_trx" => "payment_on_delivery"
             ),
+            array(
+                "name" => "hyperchargemobile_sd",
+                "description" => array(
+                    "en" => "Sepa Debit Sale",
+                    "de" => "Sepa Debit Sale"
+                ),
+                "hypercharge_trx" => "sepa_debit_sale"
+            )
         );
     }
 

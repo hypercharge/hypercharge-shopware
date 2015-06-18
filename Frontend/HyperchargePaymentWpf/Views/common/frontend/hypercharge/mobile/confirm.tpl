@@ -1,4 +1,4 @@
-{if $sUserData.additional.payment.name == "hyperchargemobile_cc" || $sUserData.additional.payment.name == "hyperchargemobile_dd" || $sUserData.additional.payment.name == "hyperchargemobile_pa" || $sUserData.additional.payment.name == "hyperchargemobile_gd" || $sUserData.additional.payment.name == "hyperchargemobile_gp"}
+{if $sUserData.additional.payment.name == "hyperchargemobile_cc" || $sUserData.additional.payment.name == "hyperchargemobile_dd" || $sUserData.additional.payment.name == "hyperchargemobile_pa" || $sUserData.additional.payment.name == "hyperchargemobile_gd" || $sUserData.additional.payment.name == "hyperchargemobile_gp" || $sUserData.additional.payment.name == "hyperchargemobile_sd"}
     <form name="" method="POST" >
         <div class="payment_method">
             <h3 class="underline">
@@ -9,9 +9,11 @@
                 {else if $sUserData.additional.payment.name == "hyperchargemobile_pa"}
                     {s name=ClientData namespace="HyperchargePaymentWpf/Views/common/frontend/hypercharge/mobile/confirm"}Payolution{/s}
                 {else if $sUserData.additional.payment.name == "hyperchargemobile_gd"}
-                    {s name=BankDataSepa namespace="HyperchargePaymentWpf/Views/common/frontend/hypercharge/mobile/confirm"}GTD Sepa Debit Sale{/s}
+                    {s name=BankDataSepaGTD namespace="HyperchargePaymentWpf/Views/common/frontend/hypercharge/mobile/confirm"}GTD Sepa Debit Sale{/s}
                 {else if $sUserData.additional.payment.name == "hyperchargemobile_gp"}
                     {s name=ClientDataGTD namespace="HyperchargePaymentWpf/Views/common/frontend/hypercharge/mobile/confirm"}GTD Purchase On Account{/s}
+                {else if $sUserData.additional.payment.name == "hyperchargemobile_sd"}
+                    {s name=BankDataSepa namespace="HyperchargePaymentWpf/Views/common/frontend/hypercharge/mobile/confirm"}Sepa Debit Sale{/s}
                 {/if}
             </h3>
             <div class="grid_15 method">
