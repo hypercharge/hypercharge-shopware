@@ -315,7 +315,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         $config = $plugin->Config();
         $plugin->logAction("CANCEL");
         //return $this->redirect(array('controller' => 'checkout'));
-        Shopware()->Session()->nfxErrorMessage = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/failed')->get("CancelledTransaction", "The transaction was cancelled by the user!");
+        Shopware()->Session()->nfxErrorMessage = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/common/frontend/hypercharge/payment_hyperchargewpf/failed')->get("CancelledTransaction", "The transaction was cancelled by the user!");
         if ($config->hypercharge_layout == "Redirect") {
             $this->redirect(array(
                 'action' => 'failed',

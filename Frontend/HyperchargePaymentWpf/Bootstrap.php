@@ -9,24 +9,6 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  * @copyright Copyright (c) 2014, nfx:MEDIA
  * @author nf, ma info@nfxmedia.de
  * @package nfxMEDIA
- * @version 2.0.0 / implement Mobile API + select WPF payment method in Shopware + iFrame for WPF / 2014-05-13
- * @version 2.0.1 / fix UTF8 issue + some translations / 2014-06-10
- * @version 2.0.2 / some translations / 2014-06-12
- * @version 2.0.3 / Helper::appendRandomId + check error message on notify + disable submit button after the click / 2014-07-09
- * @version 2.0.4 / add flag to avoid double click / 2014-07-11
- * @version 2.0.5 / add Purchase On Account - Payolution / 2014-07-22
- * @version 2.0.6 / validate AGB check / 2014-08-08
- * @version 2.0.7 / avoid double click for WPF too + get client's birthday as default value + fix update() issue / 2014-08-11
- * @version 2.0.8 / send shipping address for "Purchase on Account" + change Mobile call fron jsonp to regular AJAX / 2014-09-15
- * @version 2.0.9 / add GtdSepaDebitSale + GtdPurchaseOnAccount + add risk_params to Purchase On Account / 2014-10-08
- * @version 2.0.10 / add birthday validation as an option / 2014-10-28
- * @version 2.1.0 / fine tuning and polishing / 2014-10-28
- * @version 2.1.1 / do not enable the Payments anymore on enable() + remove UTF8 charset / 2014-12-12
- * @version 2.1.2 / add birthday to GTD Sepa Debit Sale + add WPF Kreditkarte payment method + set default option Redirect + fix checkout for redirect / 2015-01-21
- * @version 2.1.3 / some js and css changes for Connexco compatibility / 2015-02-05
- * @version 2.1.4 / we don't send the customer phone in case is not set / 2015-04-14
- * @version 2.1.5 / Easy Checkout compatibility / 2015-04-23
- * @version 2.1.6 / fix sAGB checkbox name + minor CSS change / 2015-05-12
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
@@ -131,6 +113,12 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $payments = $this->HyperchargePayments();
         foreach ($payments as $payment) {
             $payment->setActive(false);
+            //SW5 does not set the payments inactive
+            try{
+                Shopware()->Db()->query("UPDATE s_core_paymentmeans SET active = 0 WHERE active = 1 AND name = ?;", array($payment->getName()));
+            } catch (Exception $ex) {
+
+            }
         }
 
         return parent::disable();
@@ -162,7 +150,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 foreach ($item["logos"] as $image) {
                     $img = base64_encode(file_get_contents(dirname(__FILE__)
                                     . "/img/$image"));
-                    $additionalDescription .= '<img src="data:image/png;base64,' . $img . '" border="0" style="margin-right:3px;height:30px;"/>';
+                    $additionalDescription .= '<img src="data:image/png;base64,' . $img . '" border="0" style="margin-right:3px;height:30px;float:left;"/>';
                 }
                 $this->createPayment(array(
                     'name' => $item["name"],
@@ -361,7 +349,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return string
      */
     public static function onGetControllerPath(Enlight_Event_EventArgs $args) {
-        Shopware()->Template()->addTemplateDir(dirname(__FILE__) . '/Views/');
+        Shopware()->Plugins()->Frontend()->HyperchargePaymentWpf()->addTemplateDirs();
         return dirname(__FILE__) . '/Controllers/frontend/Hyperchargewpf.php';
     }
 
@@ -376,28 +364,34 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
 
         $controller = $request->getControllerName();
         $action = $request->getActionName();
-
         if ($controller != "checkout" && $request->getModuleName() == 'frontend') {
             Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayDay");
             Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayMonth");
             Shopware()->Session()->offsetUnset("nfxPayolutionBirthdayYear");
             Shopware()->Session()->offsetUnset("nfxPayolutionAgree");
         }
-        if (!$request->isDispatched() || $response->isException() || $request->getModuleName() != 'frontend' || $request->isXmlHttpRequest() || !(($controller == "checkout" && $action == "confirm") || ($controller == "account" && $action == "payment") || ($controller == "payment_hyperchargewpf" && $action == "failed"))
+        if (!$request->isDispatched() || $response->isException() || $request->getModuleName() != 'frontend' || !(($controller == "checkout" && $action == "confirm") || ($controller == "account" && $action == "payment") || ($controller == "payment_hyperchargewpf" && $action == "failed") || ($controller == "checkout" && $action == "shippingPayment"))
         ) {
             return;
         }
+        if($request->isXmlHttpRequest() && !($controller == "checkout" && $action == "shippingPayment")){
+            return;
+        }
         $view = $args->getSubject()->View();
-        
-        Shopware()->Template()->addTemplateDir($this->Path() . 'Views/');
+        $isResponsive = $this->checkShopwareResponsiveTemplate();
+        Shopware()->Plugins()->Frontend()->HyperchargePaymentWpf()->addTemplateDirs();
         $isSameAddress = $this->compareAddresses($view->sUserData);
         $isAllowedCountry = $this->isAllowedCountry($view->sUserData["billingaddress"]["countryID"]);
 
         if ($controller != "account") {
-            $view->extendsTemplate('frontend/index/indexHypercharge.tpl');
+            if(!$isResponsive){
+                $view->extendsTemplate('frontend/index/indexHypercharge.tpl');
+            }
         }
         if ($controller == "checkout") {
-            $view->extendsTemplate('frontend/payment_hyperchargewpf/mobile.tpl');
+            if(!$isResponsive){
+                $view->extendsTemplate('frontend/payment_hyperchargewpf/mobile.tpl');
+            }
             $router = Shopware()->Router();
             $view->shopware_redirect = $router->assemble(array(
                 'controller' => 'PaymentHyperchargewpf', 'action' => 'hypercharge_mobile', 'forceSecure' => true
@@ -418,7 +412,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             $view->nfxLang = Shopware()->Locale()->getLanguage();
             $view->nfxSameAddress = $isSameAddress;
             $view->nfxAllowedCountry = $isAllowedCountry;
-            $view->nfxAgreeText = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/frontend/payment_hyperchargewpf/hyperchargemobile_gp')->get('AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.');
+            $view->nfxAgreeText = Shopware()->Snippets()->getNamespace('HyperchargePaymentWpf/Views/common/frontend/hypercharge/mobile/hyperchargemobile_gp')->get('AgreeText', 'Mit der Übermittlung der für die Abwicklung des Rechnungskaufes und einer Identitäts- und Bonitätsprüfung erforderlichen Daten an payolution bin ich einverstanden. <a href="" target="_blank">Meine Einwilligung</a> kann ich jederzeit mit Wirkung für die Zukunft widerrufen.');
             $view->nfxAgreeText = str_replace('href=""', 'href="' . $this->Config()->agree_link . '"', $view->nfxAgreeText);
             if (isset(Shopware()->Session()->nfxPayolutionBirthdayDay)) {
                 $view->nfxPayolutionBirthdayDay = Shopware()->Session()->nfxPayolutionBirthdayDay;
@@ -448,6 +442,19 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 }
                 $view->assign($paymentsVar, $new_payments);
             }
+        }
+    }
+    
+    /**
+     * add template dirs based on SW version
+     */
+    public function addTemplateDirs(){
+        $isResponsive = $this->checkShopwareResponsiveTemplate();
+        Shopware()->Template()->addTemplateDir($this->Path() . 'Views/common/');
+        if($isResponsive){
+            Shopware()->Template()->addTemplateDir($this->Path() . 'Views/responsive/');
+        } else {
+            Shopware()->Template()->addTemplateDir($this->Path() . 'Views/emotion/');
         }
     }
 
@@ -704,6 +711,17 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
 
         return 0;
     }
+    
+    /**
+     * Returns true if it's Shopware 5
+     *
+     */
+    public function checkShopwareResponsiveTemplate() {
+        if ($this->assertMinimumVersion('5') && Shopware()->Shop()->getTemplate()->getVersion() >= 3) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Logger for events
@@ -744,50 +762,66 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             }
         }
     }
-
+    
     /**
-     * Returns information about the payment plugin
-     * @return array
-     */
-    public function getInfo() {
-        $img = base64_encode(file_get_contents(dirname(__FILE__)
-                        . '/img/logo.png'));
-        return array(
-            'version' => $this->getVersion(),
-            'label' => $this->getLabel(),
-            'description' => '<p>
-                    <img src="data:image/png;base64,' . $img . '" />
-                </p>
-                <p style="font-size:12px; font-weight: bold;">
-                    Hypercharge WebPaymentForm allows you to use a variety of 
-                    payment methods, both online and off-line. Any sensitive 
-                    information is safely aquired an processed on out platform
-                </p>',
-            'autor' => 'nfx:MEDIA',
-            'copyright' => 'Copyright (c) 2014, nfx:MEDIA',
-            'source' => '',
-            'license' => '',
-            'support' => 'info@nfxmedia.de',
-            'link' => 'http://www.nfxmedia.de',
-            'changes' => '',
-            'revision' => '4840'
-        );
-    }
-
-    /**
-     * Returns the version
+     * Reads Plugins Meta Information
      * @return string
      */
-    public function getVersion() {
-        return "2.1.6";
+    public function getInfo() {
+        $info = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'plugin.json'), true);
+
+        if ($info) {
+            $img = base64_encode(file_get_contents(dirname(__FILE__)
+                        . '/img/logo.png'));
+            $description = str_replace("<%IMG%>", $img, $info['description']);
+            
+            return array(
+                'version' => $info['currentVersion'],
+                'author' => $info['author'],
+                'copyright' => $info['copyright'],
+                'label' => $this->getLabel(),
+                'source' => $info['source'],
+                'description' => $description,
+                'license' => $info['license'],
+                'support' => $info['support'],
+                'link' => $info['link'],
+                'changes' => $info['changelog'],
+                'revision' => '1'
+            );
+        } else {
+            throw new Exception('The plugin has an invalid version file.');
+        }
     }
 
     /**
-     * Returns the plugins label
+     * Returns the current version of the plugin.
+     *
+     * @return string|void
+     * @throws Exception
+     */
+    public function getVersion() {
+        $info = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'plugin.json'), true);
+
+        if ($info) {
+            return $info['currentVersion'];
+        } else {
+            throw new Exception('The plugin has an invalid version file.');
+        }
+    }
+
+    /**
+     * Get (nice) name for plugin manager list
+     *
      * @return string
      */
     public function getLabel() {
-        return "Hypercharge Payment Plugin";
+        $info = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'plugin.json'), true);
+
+        if ($info) {
+            return $info['label']["de"];
+        } else {
+            throw new Exception('The plugin has an invalid version file.');
+        }
     }
 
 }

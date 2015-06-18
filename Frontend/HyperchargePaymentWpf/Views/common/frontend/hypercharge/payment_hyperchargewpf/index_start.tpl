@@ -1,0 +1,1 @@
+{$sBreadcrumb = [['name'=>"{s name=PaymentTitle namespace="HyperchargePaymentWpf/Views/common/frontend/hypercharge/payment_hyperchargewpf/index"}Zahlung mit Hypercharge{/s}"]]}
