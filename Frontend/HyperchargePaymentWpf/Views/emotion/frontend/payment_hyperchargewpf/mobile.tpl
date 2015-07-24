@@ -4,7 +4,7 @@
 {/block}
 <!-- For existing clients -->
 {block name='frontend_checkout_confirm_payment' append}
-    {if !$sRegisterFinished}
+    {* if !$sRegisterFinished *}
         {include file="frontend/hypercharge/mobile/confirm.tpl"}
-    {/if}
+    {*/if *}
 {/block}

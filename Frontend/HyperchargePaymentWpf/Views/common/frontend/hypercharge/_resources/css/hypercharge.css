@@ -24,7 +24,11 @@
     white-space:nowrap;
 }
 
-.grid_13 .error h2 {
+.nfx-grid {
+    float: none !important;
+    clear: both !important;
+}
+.nfx-grid .error h2 {
     color: #8a1f11;
     margin: 0 0 10px 0;
     padding: 0 0 0px 0;

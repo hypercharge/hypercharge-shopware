@@ -429,6 +429,10 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             $view->nfxAGBMsg = Shopware()->Snippets()->getNamespace('frontend/checkout/confirm')->get('ConfirmErrorAGB', 'Bitte bestätigen Sie unsere AGB');
             $view->nfxSepaMandateId = date("Ymdhis", time()) . "a" . rand(0, 32000) * rand(0, 32000);
             $view->nfxSepaMandateSignatureDate = date("Y-m-d");
+            $view->nfxErrorMessage = Shopware()->Session()->nfxErrorMessage;
+            $view->nfxFailedAction = Shopware()->Session()->nfxFailedAction;
+            Shopware()->Session()->offsetUnset('nfxErrorMessage');
+            Shopware()->Session()->offsetUnset('nfxFailedAction');
         }
         if ($controller == "checkout" || $controller == "account") {
             if (!$isAllowedCountry) {

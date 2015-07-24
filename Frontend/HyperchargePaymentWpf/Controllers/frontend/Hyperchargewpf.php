@@ -147,7 +147,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 'usage' => 'Web Payment Form transaction',
                 'description' => 'Web Payment Form transaction',
                 'transaction_id' => $hyperchargeTransactionId,
-                'amount' => (int) ($this->getAmount() * 100),
+                'amount' => (int) (string) ($this->getAmount() * 100),
                 'currency' => $currency,
                 'customer_email' => $user['additional']['user']['email'],
                 //'customer_phone' => $user['billingaddress']['phone'],
@@ -337,13 +337,21 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
     public function failedAction() {
         Shopware()->Session()->offsetUnset("nfxLastAPICall");
         $request = $this->Request();
-        $this->View()->nfxErrorMessage = Shopware()->Session()->nfxErrorMessage;
-        Shopware()->Session()->offsetUnset('nfxErrorMessage');
+        //$this->View()->nfxErrorMessage = Shopware()->Session()->nfxErrorMessage;
+        //Shopware()->Session()->offsetUnset('nfxErrorMessage');
         $plugin = $this->Plugin();
         $plugin->logAction("FAILED:");
         foreach ($request->getParams() as $key => $value) {
             $plugin->logAction("\t$key => $value");
+            if($key == "msg" && !Shopware()->Session()->nfxErrorMessage){
+                Shopware()->Session()->nfxErrorMessage = $value;
+                //$this->View()->nfxErrorMessage = Shopware()->Session()->nfxErrorMessage;
+            }
         }
+        //we want to display the error message above the payment method
+        Shopware()->Session()->nfxFailedAction = true;
+        $this->redirect(array('controller' => 'checkout', 'action' => 'confirm','forceSecure' => true));
+        return;
     }
 
     /**
@@ -534,7 +542,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 'type' => 'MobilePayment',
                 'usage' => 'Mobile Payment transaction',
                 'transaction_id' => $hyperchargeTransactionId,
-                'amount' => (int) ($this->getAmount() * 100),
+                'amount' => (int) (string) ($this->getAmount() * 100),
                 'currency' => $currency,
                 'customer_email' => $user['additional']['user']['email'],
                 //'customer_phone' => $user['billingaddress']['phone'],
