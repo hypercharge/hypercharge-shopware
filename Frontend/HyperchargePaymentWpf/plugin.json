@@ -10,10 +10,11 @@
     "support": "support@nfxmedia.de",
     "description": "<p><img src='data:image/png;base64,<%IMG%>' /></p><p style='font-size:12px; font-weight: bold;'>Hypercharge WebPaymentForm allows you to use a variety of payment methods, both online and off-line. Any sensitive information is safely aquired an processed on out platform</p>",
 
-    "currentVersion": "2.1.9",
+    "currentVersion": "2.2.0",
 
     "changelog": {
         "de": {
+            "2.2.0" : "bug fixing: set the correct status for refunded transactions (changed to Rückerstattung) // 2015-09-08",
             "2.1.9" : "display the error message above the payment method + fix the amount when conversion to int loses one cent // 2015-07-15",
             "2.1.8" : "add SepaDebitSale // 2015-06-18",
             "2.1.7" : "SW 5 compatibility // 2015-06-01",
@@ -37,6 +38,7 @@
             "2.0.0" : "implement Mobile API + select WPF payment method in Shopware + iFrame for WPF // 2014-05-13"
         },
         "en": {
+            "2.2.0" : "bug fixing: set the correct status for refunded transactions (changed to Rückerstattung) // 2015-09-08",
             "2.1.9" : "display the error message above the payment method + fix the amount when conversion to int loses one cent // 2015-07-15",
             "2.1.8" : "add SepaDebitSale // 2015-06-18",
             "2.1.7" : "SW 5 compatibility // 2015-06-01",

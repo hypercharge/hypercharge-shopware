@@ -439,11 +439,13 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 case 'voided':
                 case 'error':
                 case 'rejected':
-                    $newStatus = 35;
+                    $newStatus = 52;//35;
+                    break;
                 case 'pending':
                 case 'pending_async':
                 case 'pre_arbitrated':
                     $newStatus = 17;
+                    break;
                 default:
                     break;
             }
