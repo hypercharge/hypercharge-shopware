@@ -238,6 +238,12 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             }
             $plugin->logAction("$payment_name response received\n"
                     . print_r($paymentH, true));
+            
+            if($config->transactionId == "uniqueId"){
+                //we will change transactionID = uniqueID
+                Shopware()->Session()->nfxUniqueID = $paymentH->unique_id;
+                $plugin->logAction(sprintf('The transactionId will be changed from %s to %s', $transactionId, $paymentH->unique_id));
+            }
 
             mb_internal_encoding($initial_encoding);
             // Redirect for WPF
@@ -292,7 +298,14 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         foreach ($request->getParams() as $key => $value) {
             $plugin->logAction("\t$key => $value");
         }
-        $this->saveOrder($request->getParam('transactionID'), $request->getParam('uniquePaymentID'), null, true);
+        $transactionId = $request->getParam('transactionID');
+        if(Shopware()->Session()->nfxUniqueID){
+            $uniqueId = Shopware()->Session()->nfxUniqueID;
+            $plugin->logAction(sprintf('The transactionId is changed from %s to %s', $transactionId, $uniqueId));
+            Shopware()->Session()->offsetUnset("nfxUniqueID");
+            $transactionId = $uniqueId;
+        }
+        $this->saveOrder($transactionId, $request->getParam('uniquePaymentID'), null, true);
         $this->redirect(array('controller' => 'checkout',
             'action' => 'finish',
             'sUniqueID' => $request->getParam('uniquePaymentID'),
@@ -396,6 +409,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             $plugin->logAction("payment OK");
 
             // Find the transaction
+            $transaction_id_field = "transactionId";
             $trn = explode('---', $paymentH->transaction_id);
             list($transactionId, $paymentId) = explode(' ', $trn[0]);
             if (empty($transactionId) || empty($paymentId)) {
@@ -403,6 +417,8 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 throw new Enlight_Controller_Exception('Incorrect transaction id');
                 exit();
             }
+            //Find unique_id
+            $uniqueId = $paymentH->unique_id;
 
             // Identify notification channel
             $transactionH = $notification->getTransaction();
@@ -418,9 +434,33 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 $paymentId
             ));
 
+            if(!$orderId && $config->transactionId == "uniqueId"){
+                //double-check if the order exists
+                $sql = '
+                            SELECT id FROM s_order
+                            WHERE transactionID=? AND temporaryID=?
+                            AND status!=-1
+                    ';
+                $orderId = Shopware()->Db()->fetchOne($sql, array(
+                    $uniqueId,
+                    $paymentId
+                ));
+                if($orderId){
+                    $transaction_id_field = "uniqueId";
+                }
+            }
+
             if (!$orderId) {
-                $plugin->logAction(sprintf('The order having transaction %s and payment id %s does not exist', $transactionId, $paymentId));
+                if($config->transactionId == "uniqueId"){
+                    $plugin->logAction(sprintf('The order having payment id %s and transaction %s or %s does not exist', $paymentId, $transactionId, $uniqueId));
+                } else {
+                    $plugin->logAction(sprintf('The order having payment id %s and transaction %s does not exist', $paymentId, $transactionId));
+                }
                 exit();
+            }
+            //the transactionID was changed to uniqueID
+            if($transaction_id_field == "uniqueId"){
+                $transactionId = $uniqueId;
             }
 
             // Payment status mapping
@@ -618,6 +658,11 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             Shopware()->Session()->nfxUniquePaymentID = $uniquePaymentId;
             Shopware()->Session()->nfxTransactionID = $transactionId;
+            if($config->transactionId == "uniqueId"){
+                //we will change transactionID = uniqueID
+                Shopware()->Session()->nfxUniqueID = $paymentH->unique_id;
+                $plugin->logAction(sprintf('The transactionId will be changed from %s to %s', $transactionId, $paymentH->unique_id));
+            }
 
             echo json_encode(array(
                 "success" => true,

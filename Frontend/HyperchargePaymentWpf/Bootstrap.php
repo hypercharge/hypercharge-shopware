@@ -174,11 +174,14 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return void
      */
     public function createForm() {
+        $index = 0;
+        $positions = array();
         $form = $this->Form();
 
         $form->setElement('boolean', 'hypercharge_test', array(
             'label' => 'Verwenden Testmodus?', 'value' => true
         ));
+        $positions['hypercharge_test'] = $index++;
         $form->setElement('textarea', 'hypercharge_channels', array(
             'label' => 'Hypercharge Kanal',
             'description' => 'Hypercharge channels, one per line, with the 
@@ -187,53 +190,74 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 Channel elements must be separated by commas',
             'value' => 'eg. USD,76876dfca7a,fa223bcaaa,ab55332299f7a'
         ));
-        /* $form->setElement('text', 'hypercharge_ttl', array(
-          'label' => 'Transaktion TTL',
-          'description' => 'Time To Live of the transaction, in minutes',
-          'value' => 5
-          )); */
+        $positions['hypercharge_channels'] = $index++;
         $form->setElement('select', 'hypercharge_layout', array(
             'label' => 'Seiten-Layout des Zahlungsvorgangs',
             'required' => true,
             'value' => 'Redirect',
             'store' => array(array('iFrame', 'Integration der Bezahlseite via iFrame'), array('Redirect', 'Weiterleitung zu Hypercharge'))
         ));
+        $positions['hypercharge_layout'] = $index++;
         $form->setElement('numberfield', 'iFrameHeight', array(
             'label' => 'iFrame H&ouml;he',
             'value' => '720'
         ));
+        $positions['iFrameHeight'] = $index++;
         $form->setElement('numberfield', 'iFrameWidth', array(
             'label' => 'iFrame Breite',
             'value' => '959'
         ));
+        $positions['iFrameWidth'] = $index++;
         $form->setElement('combo', 'credit_card_types', array(
             'label' => 'Kreditkartentypen',
             'required' => true,
             'multiSelect' => true,
             'store' => $this->getCardTypes()
         ));
+        $positions['credit_card_types'] = $index++;
         $form->setElement('checkbox', 'editable_by_user', array(
             'label' => 'Editieren der Rechnungsadresse durch den Nutzer zulassen',
             'value' => false
         ));
+        $positions['editable_by_user'] = $index++;
         $form->setElement('combo', 'payolution_countries', array(
             'label' => 'Rechnungskauf f&uuml;r &Ouml;sterreich und Schweiz',
             'required' => false,
             'multiSelect' => true,
             'store' => $this->getCountries()
         ));
+        $positions['payolution_countries'] = $index++;
         $form->setElement('text', 'agree_link', array(
             'label' => 'Meine Einwilligung Link',
             'value' => ''
         ));
+        $positions['agree_link'] = $index++;
         $form->setElement('checkbox', 'birthday_validation', array(
             'label' => 'Validierung Geburtstag',
             'value' => true
         ));
+        $positions['birthday_validation'] = $index++;
+        $form->setElement('select', 'transactionId', array(
+            'label' => 'transactionID Feld',
+            'required' => true,
+            'value' => 'transactionId',
+            'store' => array(array('transactionId', 'TransactionID'), array('uniqueId', 'UniqueID'))
+        ));
+        $positions['transactionId'] = $index++;
         $form->setElement('checkbox', 'hypercharge_logging', array(
             'label' => 'Ausgabe von Logdateien',
             'value' => false
         ));
+        $positions['hypercharge_logging'] = $index++;
+
+        $elements = $form->getElements();
+        foreach ($elements as $element) {
+            if (isset($positions[$element->getName()])) {
+                $element->setPosition($positions[$element->getName()]);
+            } else {
+                $element->setPosition(999); //this should be better deleted
+            }
+        }
     }
 
     /**
@@ -259,7 +283,8 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'editable_by_user' => 'Allow the user to edit the billing address',
                 'payolution_countries' => 'Allow Purchase On Account for Austria and Switzerland',
                 'agree_link' => 'My consent link',
-                'birthday_validation' => 'Purchase on Account Birthday Validation'
+                'birthday_validation' => 'Purchase on Account Birthday Validation',
+                'transactionId' => 'TransactionID field'
             )
         );
         $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
