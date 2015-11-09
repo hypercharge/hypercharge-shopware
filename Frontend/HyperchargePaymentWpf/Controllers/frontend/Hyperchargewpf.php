@@ -496,7 +496,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             // Update payment status
             $plugin->logAction(sprintf('Updating transaction %s with payment id %s to %s', $transactionId, $paymentId, $newStatus));
-            $this->savePaymentStatus($transactionId, $paymentId, $newStatus, true);
+            $this->savePaymentStatus($transactionId, $paymentId, $newStatus, false);
 
             $plugin->logAction('Notification finished');
 
