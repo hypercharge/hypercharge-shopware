@@ -60,4 +60,9 @@ CCY2,user,password,channel_id_2
 
 **Ausgabe von Logdateien:** mit der Auswahl von "Ja" und "Nein" bestimmen Sie, ob für die Zahlungsprozesse Logdateien ausgegeben werden und auf Ihren Server geschrieben werden. In der Logdatei werden die Daten erfasst, die von Shopware zu Hypercharge gesendet werden. Zudem werden darin Angaben dazu aufgeführt, welche Daten von Hypercharge gespeichert werden und es werden Rückmeldungen oder Hinweise von Hypercharge aufgeführt. 
 
+**transactionID Feld:** in diesem Felk können Sie einstellen, ob im Shopware transactionID Feld der Wert transactionID oder uniqueID des Hypercharge Gateways gespeichert werden soll
+
+![Abbildung: Backend Einstellungen im Überblick](/Frontend/HyperchargePaymentWpf/img/PluginEinstellungenHyperchargeGateway.png)
+Abbildung: Backend Einstellungen im Überblick
+
 ----------
