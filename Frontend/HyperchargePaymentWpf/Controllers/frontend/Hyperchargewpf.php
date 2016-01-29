@@ -423,30 +423,41 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             // Identify notification channel
             $transactionH = $notification->getTransaction();
 
-            //double-check if the order exists
-            $sql = '
-			SELECT id FROM s_order
-			WHERE transactionID=? AND temporaryID=?
-			AND status!=-1
-		';
-            $orderId = Shopware()->Db()->fetchOne($sql, array(
-                $transactionId,
-                $paymentId
-            ));
-
-            if(!$orderId && $config->transactionId == "uniqueId"){
+            $try = 1;
+            //sometimes Hypercharge is faster than SW => we try more times to check the order
+            while($try<4){
                 //double-check if the order exists
+                $plugin->logAction(sprintf('double-check if the order exists (try %s)', $try));
                 $sql = '
                             SELECT id FROM s_order
                             WHERE transactionID=? AND temporaryID=?
                             AND status!=-1
                     ';
                 $orderId = Shopware()->Db()->fetchOne($sql, array(
-                    $uniqueId,
+                    $transactionId,
                     $paymentId
                 ));
+
+                if(!$orderId && $config->transactionId == "uniqueId"){
+                    //double-check if the order exists
+                    $sql = '
+                                SELECT id FROM s_order
+                                WHERE transactionID=? AND temporaryID=?
+                                AND status!=-1
+                        ';
+                    $orderId = Shopware()->Db()->fetchOne($sql, array(
+                        $uniqueId,
+                        $paymentId
+                    ));
+                    if($orderId){
+                        $transaction_id_field = "uniqueId";
+                    }
+                }
                 if($orderId){
-                    $transaction_id_field = "uniqueId";
+                    $try = 10;
+                } else{
+                    $try++;
+                    sleep(2);
                 }
             }
 

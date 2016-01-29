@@ -10,36 +10,13 @@
     "support": "support@nfxmedia.de",
     "description": "<p><img src='data:image/png;base64,<%IMG%>' /></p><p style='font-size:12px; font-weight: bold;'>Hypercharge WebPaymentForm allows you to use a variety of payment methods, both online and off-line. Any sensitive information is safely aquired an processed on out platform</p>",
 
-    "currentVersion": "2.2.2",
+    "currentVersion": "2.2.3",
 
     "changelog": {
         "de": {
-            "2.2.2" : "some fixes for SW5.1 + remove the status email // 2015-11-09",
-            "2.2.1" : "store the uniqueID or the transactionID inside of the transaction ID field // 2015-11-06",
-            "2.2.0" : "bug fixing: set the correct status for refunded transactions (changed to Rückerstattung) // 2015-09-08",
-            "2.1.9" : "display the error message above the payment method + fix the amount when conversion to int loses one cent // 2015-07-15",
-            "2.1.8" : "add SepaDebitSale // 2015-06-18",
-            "2.1.7" : "SW 5 compatibility // 2015-06-01",
-            "2.1.6" : "fix sAGB checkbox name + minor CSS change // 2015-05-12",
-            "2.1.5" : "Easy Checkout compatibility // 2015-04-23",
-            "2.1.4" : "we don't send the customer phone in case is not set // 2015-04-14",
-            "2.1.3" : "some js and css changes for Connexco compatibility // 2015-02-05",
-            "2.1.2" : "add birthday to GTD Sepa Debit Sale + add WPF Kreditkarte payment method + set default option Redirect + fix checkout for redirect // 2015-01-21",
-            "2.1.1" : "do not enable the Payments anymore on enable() + remove UTF8 charset // 2014-12-12",
-            "2.1.0" : "fine tuning and polishing // 2014-10-28",
-            "2.0.10" : "add birthday validation as an option // 2014-10-28",
-            "2.0.9" : "add GtdSepaDebitSale + GtdPurchaseOnAccount + add risk_params to Purchase On Account // 2014-10-08",
-            "2.0.8" : "send shipping address for 'Purchase on Account' + change Mobile call fron jsonp to regular AJAX // 2014-09-15",
-            "2.0.7" : "avoid double click for WPF too + get client's birthday as default value + fix update() issue // 2014-08-11",
-            "2.0.6" : "validate AGB check // 2014-08-08",
-            "2.0.5" : "add Purchase On Account - Payolution // 2014-07-22",
-            "2.0.4" : "add flag to avoid double click // 2014-07-11",
-            "2.0.3" : "Helper::appendRandomId + check error message on notify + disable submit button after the click // 2014-07-09",
-            "2.0.2" : "some translations // 2014-06-12",
-            "2.0.1" : "fix UTF8 issue + some translations // 2014-06-10",
-            "2.0.0" : "implement Mobile API + select WPF payment method in Shopware + iFrame for WPF // 2014-05-13"
         },
         "en": {
+            "2.2.3" : "check many times the order existence in notification // 2016-01-28",
             "2.2.2" : "some fixes for SW5.1 + remove the status email // 2015-11-09",
             "2.2.1" : "store the uniqueID or the transactionID inside of the transaction ID field // 2015-11-06",
             "2.2.0" : "bug fixing: set the correct status for refunded transactions (changed to Rückerstattung) // 2015-09-08",
