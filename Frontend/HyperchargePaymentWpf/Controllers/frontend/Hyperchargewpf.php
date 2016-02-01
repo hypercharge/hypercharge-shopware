@@ -407,6 +407,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 exit();
             }
             $plugin->logAction("payment OK");
+            $plugin->logAction(sprintf('payment status: %s', $paymentH->status));
 
             // Find the transaction
             $transaction_id_field = "transactionId";
@@ -422,6 +423,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             // Identify notification channel
             $transactionH = $notification->getTransaction();
+            $plugin->logAction(sprintf('transaction type: %s', $transactionH->transaction_type));
 
             $try = 1;
             //sometimes Hypercharge is faster than SW => we try more times to check the order

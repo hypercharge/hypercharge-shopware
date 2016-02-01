@@ -10,12 +10,13 @@
     "support": "support@nfxmedia.de",
     "description": "<p><img src='data:image/png;base64,<%IMG%>' /></p><p style='font-size:12px; font-weight: bold;'>Hypercharge WebPaymentForm allows you to use a variety of payment methods, both online and off-line. Any sensitive information is safely aquired an processed on out platform</p>",
 
-    "currentVersion": "2.2.4",
+    "currentVersion": "2.2.5",
 
     "changelog": {
         "de": {
         },
         "en": {
+            "2.2.5" : "imporve the logging // 2016-02-01",
             "2.2.4" : "create weekly emails about the cancelled orders // 2016-01-29",
             "2.2.3" : "check many times the order existence in notification // 2016-01-28",
             "2.2.2" : "some fixes for SW5.1 + remove the status email // 2015-11-09",
