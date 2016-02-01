@@ -12,6 +12,8 @@ require_once dirname(__FILE__) . '/vendor/autoload.php';
  */
 class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware_Components_Plugin_Bootstrap {
 
+    const CANCELLED_ORDERS_EMAIL_TEMPLATE = "hyperchargeCANCELLED_ORDERS";
+    
     /**
      * Performs the necessary installation steps
      * @return boolean
@@ -35,6 +37,8 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $this->createPaymentsTranslations();
         $this->createSnippets();
         $this->createEvents();
+        $this->createCronJobs();
+        $this->createEmails();
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
@@ -74,6 +78,8 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
           }
           }
          */
+        $this->createCronJobs();
+        $this->createEmails();
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
@@ -244,11 +250,17 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             'store' => array(array('transactionId', 'TransactionID'), array('uniqueId', 'UniqueID'))
         ));
         $positions['transactionId'] = $index++;
+        $form->setElement('text', 'cancelled_orders_emails', array(
+            'label' => 'E-Mail Adresse - abgebrochene Bestellungen',
+            'value' => ''
+        ));
+        $positions['cancelled_orders_emails'] = $index++;
         $form->setElement('checkbox', 'hypercharge_logging', array(
             'label' => 'Ausgabe von Logdateien',
             'value' => false
         ));
         $positions['hypercharge_logging'] = $index++;
+        
 
         $elements = $form->getElements();
         foreach ($elements as $element) {
@@ -284,7 +296,8 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'payolution_countries' => 'Allow Purchase On Account for Austria and Switzerland',
                 'agree_link' => 'My consent link',
                 'birthday_validation' => 'Purchase on Account Birthday Validation',
-                'transactionId' => 'TransactionID field'
+                'transactionId' => 'TransactionID field',
+                'cancelled_orders_emails' => 'Email address - cancelled orders'
             )
         );
         $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
@@ -747,6 +760,139 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         }
 
         return 0;
+    }
+
+    /**
+     * Creates and subscribe the cron jobs
+     */
+    protected function createCronJobs() {
+        $exists = Shopware()->Db()->fetchOne("select id from s_crontab where name = 'Hypercharge Cancelled Orders'");
+        if (!$exists) {
+            $event = $this->subscribeEvent(
+                    'Shopware_CronJob_NFXHyperchargeCancelledOrders', 'onHyperchargeCancelledOrders'
+            );
+            if ($this->assertMinimumVersion('5')) {
+                $this->createCronJob("Hypercharge Cancelled Orders", "NFXHyperchargeCancelledOrders", 86400, true);
+            }else{
+                $this->subscribeCron("Hypercharge Cancelled Orders", "NFXHyperchargeCancelledOrders", 86400, true);
+            }
+        }
+    }
+    
+    /**
+     * Creates user emails:
+     * - the email which will be send out for warning about the cancelled orders
+     */
+    private function createEmails(){
+        $mailRepository = Shopware()->Models()->getRepository('Shopware\Models\Mail\Mail');
+        $mailModel = $mailRepository->findOneBy(array(
+                'name' => $this->getCancelledOrdersEmailTemplate()
+        ));
+        if($mailModel) {
+            return;
+        }
+        $params = array();
+        $params["name"] = $this->getCancelledOrdersEmailTemplate();
+        $params["fromName"] = "{config name=shopName}";
+        $params["fromMail"] = "{config name=mail}";
+        $params["subject"] = "Hypercharge - abgebrochene Bestellungen";
+        $params["content"] = "";
+        $params["contentHtml"] = '{$data}';
+        $params["isHtml"] = true;
+        $params["attachment"] = "";
+        $params["type"] = "";
+        $params["context"] = "";
+        $params["contextPath"] = "";
+        $params["parentId"] = 0;
+        $params["index"] = 0;
+        $params["depth"] = 0;
+        $params["expanded"] = false;
+        $params["expandable"] = true;
+        $params["checked"] = null;
+        $params["leaf"] = false;
+        $params["cls"] = "";
+        $params["iconCls"] = "";
+        $params["icon"] = "";
+        $params["root"] = false;
+        $params["isLast"] = false;
+        $params["isFirst"] = false;
+        $params["allowDrop"] = true;
+        $params["allowDrag"] = true;
+        $params["loaded"] = false;
+        $params["loading"] = false;
+        $params["href"] = "";
+        $params["hrefTarget"] = "";
+        $params["qtip"] = "";
+        $params["qtitle"] = "";
+        $params["children"] = null;
+        $params['attribute'] = "";
+
+        $mail = new Shopware\Models\Mail\Mail();
+        $mail -> fromArray($params);
+        Shopware() -> Models() -> persist($mail);
+        Shopware() -> Models() -> flush();
+    }
+    
+    /**
+     * send warning email about the cancelled orders
+     * @param Shopware_Components_Cron_CronJob $job
+     */
+    public function onHyperchargeCancelledOrders(Shopware_Components_Cron_CronJob $job)
+    {
+        if (!class_exists("HyperchargeCron", false)) {
+            include $this->Path() . "Controllers/Core/Hypercharge.php";
+        }
+        try {
+            $emails = $this->get_emails($this->Config()->cancelled_orders_emails);
+            if(!$emails){
+                return;
+            }
+            $obj = new HyperchargeCron();
+            $obj->sendCancelledOrders($emails);
+            if (Shopware()->Locale()->getLanguage() == "de") {
+                echo "<br>Hypercharge Cancelled Orders laeuft<br>";
+            } else {
+                echo "<br>Hypercharge abgebrochene Bestellungen is working<br>";
+            }
+        } catch (Exception $ex) {
+            $this->logAction("Cron error: " . $ex->getMessage());
+        }
+    }
+    /**
+     * It can be set a list of emails so we check if all are valid
+     * @param unknown_type $emails
+     * @return boolean
+     */
+    function get_emails($emails) {
+        $emails = preg_split("/(,|;)/", $emails);
+        foreach ($emails as $email) {
+            if (!$this->is_email_valid($email)) {
+                //throw new Exception("The email '$email' is not valid");
+                $emails = "";
+                break;
+            }
+        }
+        return $emails;
+    }
+
+    /**
+     * Check if an email address is valid
+     * @param unknown_type $email
+     * @return boolean
+     */
+    function is_email_valid($email) {
+        if (eregi("^[a-z0-9\._-]+@+[a-z0-9\._-]+\.+[a-z]{2,3}$", $email))
+            return TRUE;
+        else
+            return FALSE;
+    }
+    
+    /**
+     * return the name of the email template whcih will be sent about the cancelled orders
+     * @return type
+     */
+    public function getCancelledOrdersEmailTemplate() {
+        return self::CANCELLED_ORDERS_EMAIL_TEMPLATE;
     }
     
     /**
