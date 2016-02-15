@@ -40,12 +40,10 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             }
             if (substr($payment_name, 0, 17) == 'hyperchargemobile') {
                 //for Mobile API we already have the transaction, we just need to save the order
-                $session = Shopware()->Session();
-                $uniquePaymentId = $session->nfxUniquePaymentID;
-                $transactionId = $session->nfxTransactionID;
-
-                $session->offsetUnset('nfxUniquePaymentID');
-                $session->offsetUnset('nfxTransactionID');
+                $sql = "SELECT * FROM hypercharge_orders WHERE sessionId = ? AND status = 0 ORDER BY id DESC LIMIT 1";
+                $trn = Shopware()->Db()->fetchRow($sql, array(Shopware()->SessionID()));
+                $uniquePaymentId = $trn["uniquePaymentId"];
+                $transactionId = $trn["transactionId"];
                 if (!$uniquePaymentId || !$transactionId) {
                     $plugin->logAction("Invalid session params");
                     //$this->redirect(array('controller' => 'checkout'));
@@ -113,6 +111,12 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             $uniquePaymentId = $this->createPaymentUniqueId();
             $transactionId = $this->createPaymentUniqueId();
+            Shopware()->Db()->insert('hypercharge_orders',
+                    array(
+                        'sessionId' => Shopware()->SessionID(),
+                        'transactionId' => $transactionId,
+                        'uniquePaymentId' => $uniquePaymentId
+                    ));
             $return_success_url = $router->assemble(
                             array('action' => 'success', 'forceSecure' => true))
                     . '?uniquePaymentID=' . $uniquePaymentId
@@ -165,6 +169,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     'country' => $user['additional']['country']['countryiso']
                 )
             );
+            
             if($user['billingaddress']['phone']){
                 $paymentData['customer_phone'] = $user['billingaddress']['phone'];
             }
@@ -238,12 +243,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             }
             $plugin->logAction("$payment_name response received\n"
                     . print_r($paymentH, true));
-            
-            if($config->transactionId == "uniqueId"){
-                //we will change transactionID = uniqueID
-                Shopware()->Session()->nfxUniqueID = $paymentH->unique_id;
-                $plugin->logAction(sprintf('The transactionId will be changed from %s to %s', $transactionId, $paymentH->unique_id));
-            }
+            Shopware()->Db()->update("hypercharge_orders", array('uniqueId' => $paymentH->unique_id), "sessionId = '" . Shopware()->SessionID() . "' AND transactionId = '" . $transactionId . "' AND uniquePaymentId = '" . $uniquePaymentId . "'");
 
             mb_internal_encoding($initial_encoding);
             // Redirect for WPF
@@ -294,28 +294,27 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
         Shopware()->Session()->offsetUnset("nfxPayolutionAgree");
         $request = $this->Request();
         $plugin = $this->Plugin();
+        $config = $plugin->Config();
         $plugin->logAction("SUCCESS:");
         foreach ($request->getParams() as $key => $value) {
             $plugin->logAction("\t$key => $value");
         }
         $transactionId = $request->getParam('transactionID');
-        if(Shopware()->Session()->nfxUniqueID){
-            $uniqueId = Shopware()->Session()->nfxUniqueID;
+        $uniquePaymentId = $request->getParam('uniquePaymentID');
+        $transaction_id_field = "transactionId";
+        if($config->transactionId == "uniqueId"){
+            $sql = "SELECT uniqueId FROM hypercharge_orders WHERE transactionId = ? AND uniquePaymentId = ?";
+            $uniqueId = Shopware()->Db()->fetchOne($sql, array($transactionId, $uniquePaymentId));
             $plugin->logAction(sprintf('The transactionId is changed from %s to %s', $transactionId, $uniqueId));
-            Shopware()->Session()->offsetUnset("nfxUniqueID");
             $transactionId = $uniqueId;
+            $transaction_id_field = "uniqueId";
         }
-        $this->saveOrder($transactionId, $request->getParam('uniquePaymentID'), null, true);
+        $this->saveOrder($transactionId, $uniquePaymentId, null, true);
+        Shopware()->Db()->update("hypercharge_orders", array('status' => 1), $transaction_id_field . " = '" . $transactionId . "' AND uniquePaymentId = '" . $uniquePaymentId . "'");
         $this->redirect(array('controller' => 'checkout',
             'action' => 'finish',
-            'sUniqueID' => $request->getParam('uniquePaymentID'),
+            'sUniqueID' => $uniquePaymentId,
             'sAGB' => 1));
-        /*$this->forward("finish", "checkout", 'frontend', array(
-            'sUniqueID' => $request->getParam('uniquePaymentID'),
-            'sAGB' => 1,
-            'appendSession' => true,
-            'forceSecure' => true
-        ));*/
     }
 
     /**
@@ -361,6 +360,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 //$this->View()->nfxErrorMessage = Shopware()->Session()->nfxErrorMessage;
             }
         }
+        Shopware()->Db()->update("hypercharge_orders", array('status' => -1), "sessionId = '" . Shopware()->SessionID() . "' AND status = 0");
         //we want to display the error message above the payment method
         Shopware()->Session()->nfxFailedAction = true;
         $this->redirect(array('controller' => 'checkout', 'action' => 'confirm','forceSecure' => true));
@@ -424,7 +424,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             // Identify notification channel
             $transactionH = $notification->getTransaction();
             $plugin->logAction(sprintf('transaction type: %s', $transactionH->transaction_type));
-
+ 
             $try = 1;
             //sometimes Hypercharge is faster than SW => we try more times to check the order
             while($try<4){
@@ -464,10 +464,32 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             }
 
             if (!$orderId) {
+                //check if it is a cancelled order
+                $sql = "SELECT o.id AS orderId 
+                        FROM hypercharge_orders AS ho
+                        JOIN s_order o ON ho.sessionId = o.temporaryID
+                        WHERE ho.transactionId = ?
+                                AND ho.uniquePaymentId = ?
+                                AND ho.uniqueId = ?
+                                AND o.status = -1";
+                $orderId = Shopware()->Db()->fetchOne($sql, array($transactionId, $paymentId, $uniqueId));
+                if($orderId){
+                    $plugin->logAction(sprintf('The order having payment id %s , transaction id %s and unique id %s is a cancelled order', $paymentId, $transactionId, $uniqueId));
+                    if($config->transactionId == "uniqueId"){
+                        $plugin->logAction(sprintf('The transactionId is changed from %s to %s', $transactionId, $uniqueId));
+                        $transaction_id_field = "uniqueId";
+                    }
+                    $orderId = $this->convertOrder($orderId, ($transaction_id_field == "uniqueId")? $uniqueId: $transactionId, $paymentId);
+                    if($orderId){
+                        Shopware()->Db()->update("hypercharge_orders", array('status' => 1), "transactionId = '" . $transactionId . "' AND uniquePaymentId = '" . $paymentId . "'");
+                    }
+                }
+            }
+            if (!$orderId) {
                 if($config->transactionId == "uniqueId"){
-                    $plugin->logAction(sprintf('The order having payment id %s and transaction %s or %s does not exist', $paymentId, $transactionId, $uniqueId));
+                    $plugin->logAction(sprintf('The order having payment id %s and transaction id %s or %s does not exist', $paymentId, $transactionId, $uniqueId));
                 } else {
-                    $plugin->logAction(sprintf('The order having payment id %s and transaction %s does not exist', $paymentId, $transactionId));
+                    $plugin->logAction(sprintf('The order having payment id %s and transaction id %s does not exist', $paymentId, $transactionId));
                 }
                 exit();
             }
@@ -591,6 +613,12 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
 
             $uniquePaymentId = $this->createPaymentUniqueId();
             $transactionId = $this->createPaymentUniqueId();
+            Shopware()->Db()->insert('hypercharge_orders',
+                    array(
+                        'sessionId' => Shopware()->SessionID(),
+                        'transactionId' => $transactionId,
+                        'uniquePaymentId' => $uniquePaymentId
+                    ));
             $hyperchargeTransactionId = $transactionId . ' ' . $uniquePaymentId;
             $hyperchargeTransactionId = \Hypercharge\Helper::appendRandomId($hyperchargeTransactionId);
             $paymentData = array(
@@ -613,6 +641,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     'country' => $user['additional']['country']['countryiso']
                 )
             );
+            
             if($user['billingaddress']['phone']){
                 $paymentData['customer_phone'] = $user['billingaddress']['phone'];
             }
@@ -669,14 +698,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             $plugin->logAction("$payment_name response received\n"
                     . print_r($paymentH, true));
 
-            Shopware()->Session()->nfxUniquePaymentID = $uniquePaymentId;
-            Shopware()->Session()->nfxTransactionID = $transactionId;
-            if($config->transactionId == "uniqueId"){
-                //we will change transactionID = uniqueID
-                Shopware()->Session()->nfxUniqueID = $paymentH->unique_id;
-                $plugin->logAction(sprintf('The transactionId will be changed from %s to %s', $transactionId, $paymentH->unique_id));
-            }
-
+            Shopware()->Db()->update("hypercharge_orders", array('uniqueId' => $paymentH->unique_id), "sessionId = '" . Shopware()->SessionID() . "' AND transactionId = '" . $transactionId . "' AND uniquePaymentId = '" . $uniquePaymentId . "'");
             echo json_encode(array(
                 "success" => true,
                 "redirect_url" => $paymentH->redirect_url,
@@ -770,6 +792,89 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             return $val;
         }
         return iconv(mb_internal_encoding(), 'utf-8', $val);
+    }
+    
+    /**
+     * convert a cancelled order into a real order
+     * @param null $orderId
+     * @param type $transactionId
+     * @param type $temporaryId
+     * @return null
+     * @throws Exception
+     */
+    private function convertOrder($orderId, $transactionId, $temporaryId){
+        try{
+            $plugin = $this->Plugin();
+            Shopware()->Models()->clear();
+            // Get user, shipping and billing
+           $builder = Shopware()->Models()->createQueryBuilder();
+           $builder->select(array('orders', 'customer', 'billing', 'payment', 'shipping'))
+               ->from('Shopware\Models\Order\Order', 'orders')
+               ->leftJoin('orders.customer', 'customer')
+               ->leftJoin('orders.payment', 'payment')
+               ->leftJoin('customer.billing', 'billing')
+               ->leftJoin('customer.shipping', 'shipping')
+               ->where("orders.id = ?1")
+               ->setParameter(1, $orderId);
+
+           $result = $builder->getQuery()->getArrayResult();
+           // Check requiered fields
+            if (empty($result) || $result[0]['customer'] === null || $result[0]['customer']['billing'] === null) {
+                throw new Exception('Could not get required customer data');
+            }
+            // Get ordernumber
+            $numberRepository = Shopware()->Models()->getRepository('Shopware\Models\Order\Number');
+            $numberModel = $numberRepository->findOneBy(array('name' => 'invoice'));
+            if ($numberModel === null) {
+                throw new Exception('Could not get ordernumber');
+            }
+            $newOrderNumber = $numberModel->getNumber() + 1;
+
+            // Set new ordernumber
+            $numberModel->setNumber($newOrderNumber);
+
+            // set new ordernumber to the order
+            $orderModel = Shopware()->Models()->find('Shopware\Models\Order\Order', $orderId);
+            $orderModel->setNumber($newOrderNumber);
+
+            // set new ordernumber to order details
+            $orderDetailRepository = Shopware()->Models()->getRepository('Shopware\Models\Order\Detail');
+            $orderDetailModel = $orderDetailRepository->findOneBy(array('orderId' => $orderId));
+            $orderDetailModel->setNumber($newOrderNumber);
+
+            // If there is no shipping address, set billing address to be the shipping address
+            if ($result[0]['customer']['shipping'] === null) {
+                $result[0]['customer']['shipping'] = $result[0]['customer']['billing'];
+            }
+
+            // Create new entry in s_order_billingaddress
+            $billingModel = new Shopware\Models\Order\Billing();
+            $billingModel->fromArray($result[0]['customer']['billing']);
+            $billingModel->setCountry(Shopware()->Models()->find('Shopware\Models\Country\Country', $result[0]['customer']['billing']['countryId']));
+            $billingModel->setCustomer(Shopware()->Models()->find('Shopware\Models\Customer\Customer', $result[0]['customer']['billing']['customerId']));
+            $billingModel->setOrder($orderModel);
+            Shopware()->Models()->persist($billingModel);
+
+            // Create new entry in s_order_shippingaddress
+            $shippingModel = new Shopware\Models\Order\Shipping();
+            $shippingModel->fromArray($result[0]['customer']['shipping']);
+            $shippingModel->setCountry(Shopware()->Models()->find('Shopware\Models\Country\Country', $result[0]['customer']['shipping']['countryId']));
+            $shippingModel->setCustomer(Shopware()->Models()->find('Shopware\Models\Customer\Customer', $result[0]['customer']['shipping']['customerId']));
+            $shippingModel->setOrder($orderModel);
+            Shopware()->Models()->persist($shippingModel);
+
+            // Finally set the order to be a regular order
+            $statusModel = Shopware()->Models()->find('Shopware\Models\Order\Status', 0);
+            $orderModel->setOrderStatus($statusModel);
+            $orderModel->setTransactionId($transactionId);
+            $orderModel->setTemporaryId($temporaryId);
+
+            Shopware()->Models()->flush();
+        } catch (Exception $ex) {
+            $orderId = null;
+            $plugin->logAction("ERROR: " . $ex->getMessage());
+        }
+        return $orderId;
     }
 
     /**

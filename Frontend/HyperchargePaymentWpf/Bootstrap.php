@@ -39,6 +39,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $this->createEvents();
         $this->createCronJobs();
         $this->createEmails();
+        $this->createTables();
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
@@ -80,6 +81,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
          */
         $this->createCronJobs();
         $this->createEmails();
+        $this->createTables();
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy'));
     }
@@ -831,6 +833,28 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
         $mail -> fromArray($params);
         Shopware() -> Models() -> persist($mail);
         Shopware() -> Models() -> flush();
+    }
+    
+    /**
+     * create Hypercharge tables
+     */
+    private function createTables(){
+        $sqls = array();
+        $sqls[] = "CREATE TABLE IF NOT EXISTS `hypercharge_orders` (
+                            `id` int(11) NOT NULL AUTO_INCREMENT,
+                            `sessionId` varchar(255) collate utf8_unicode_ci NOT NULL default '',
+                            `transactionId` varchar(255) collate utf8_unicode_ci NOT NULL default '' ,
+                            `uniquePaymentId` varchar(255) collate utf8_unicode_ci NOT NULL default '',
+                            `uniqueId` varchar(255) collate utf8_unicode_ci NULL ,
+                            `status` int(11) NOT NULL default '0',
+                            `date` timestamp NOT NULL default CURRENT_TIMESTAMP,
+                            PRIMARY KEY  (`id`),
+                            KEY `sessionId` (`sessionId`)
+                    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+                    ";
+        
+        foreach ($sqls as $sql)
+            Shopware()->Db()->exec($sql);
     }
     
     /**
