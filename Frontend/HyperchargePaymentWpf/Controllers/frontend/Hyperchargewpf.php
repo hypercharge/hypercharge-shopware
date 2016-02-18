@@ -494,7 +494,11 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             }
 
             if (!$orderId) {
-                if(in_array($newStatus, array(12,18,17))){
+                $recoverOrder = in_array($newStatus, array(12,18,17));
+                if(!$recoverOrder){
+                    $recoverOrder = $config->recover_rejected_orders;
+                }
+                if($recoverOrder){
                     //check if it is a cancelled order
                     //but only for approved or pending
                     $sql = "SELECT o.id AS orderId 

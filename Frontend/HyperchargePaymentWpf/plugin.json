@@ -10,12 +10,13 @@
     "support": "support@nfxmedia.de",
     "description": "<p><img src='data:image/png;base64,<%IMG%>' /></p><p style='font-size:12px; font-weight: bold;'>Hypercharge WebPaymentForm allows you to use a variety of payment methods, both online and off-line. Any sensitive information is safely aquired an processed on out platform</p>",
 
-    "currentVersion": "2.2.6",
+    "currentVersion": "2.2.7",
 
     "changelog": {
         "de": {
         },
         "en": {
+            "2.2.7" : "add the option Abgelehnte Bestellungen wiederherstellen // 2016-02-18",
             "2.2.6" : "log hypercharge orders and recover the canceled orders if they were created ok on Hypercharge // 2016-02-08",
             "2.2.5" : "imporve the logging // 2016-02-01",
             "2.2.4" : "create weekly emails about the cancelled orders // 2016-01-29",

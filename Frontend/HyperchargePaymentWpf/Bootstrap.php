@@ -252,6 +252,11 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             'store' => array(array('transactionId', 'TransactionID'), array('uniqueId', 'UniqueID'))
         ));
         $positions['transactionId'] = $index++;
+        $form->setElement('checkbox', 'recover_rejected_orders', array(
+            'label' => 'Abgelehnte Bestellungen wiederherstellen',
+            'value' => false
+        ));
+        $positions['recover_rejected_orders'] = $index++;
         $form->setElement('text', 'cancelled_orders_emails', array(
             'label' => 'E-Mail Adresse - abgebrochene Bestellungen',
             'value' => ''
@@ -299,7 +304,8 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                 'agree_link' => 'My consent link',
                 'birthday_validation' => 'Purchase on Account Birthday Validation',
                 'transactionId' => 'TransactionID field',
-                'cancelled_orders_emails' => 'Email address - cancelled orders'
+                'cancelled_orders_emails' => 'Email address - cancelled orders',
+                'recover_rejected_orders' => 'Recover rejected orders'
             )
         );
         $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
