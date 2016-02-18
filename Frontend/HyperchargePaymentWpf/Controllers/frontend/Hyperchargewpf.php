@@ -169,7 +169,6 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     'country' => $user['additional']['country']['countryiso']
                 )
             );
-            
             if($user['billingaddress']['phone']){
                 $paymentData['customer_phone'] = $user['billingaddress']['phone'];
             }
@@ -424,6 +423,37 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             // Identify notification channel
             $transactionH = $notification->getTransaction();
             $plugin->logAction(sprintf('transaction type: %s', $transactionH->transaction_type));
+            
+            // Payment status mapping
+            $newStatus = null;
+            $isAuthorize = $transactionH->transaction_type == 'authorize' || $transactionH->transaction_type == 'authorize3d';
+            switch ($paymentH->status) {
+                case 'approved':
+                case 'chargeback_reversed':
+                    $newStatus = 12;
+                    if ($isAuthorize)
+                        $newStatus = 18;
+                    break;
+                case 'declined':
+                case 'refunded':
+                case 'chargebacked':
+                case 'voided':
+                case 'error':
+                case 'rejected':
+                    $newStatus = 52;//35;
+                    break;
+                case 'pending':
+                case 'pending_async':
+                case 'pre_arbitrated':
+                    $newStatus = 17;
+                    break;
+                default:
+                    break;
+            }
+            if (null === $newStatus) {
+                $plugin->logAction('Undefined transaction status: ' . $paymentH->status);
+                exit();
+            }
  
             $try = 1;
             //sometimes Hypercharge is faster than SW => we try more times to check the order
@@ -464,25 +494,30 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             }
 
             if (!$orderId) {
-                //check if it is a cancelled order
-                $sql = "SELECT o.id AS orderId 
-                        FROM hypercharge_orders AS ho
-                        JOIN s_order o ON ho.sessionId = o.temporaryID
-                        WHERE ho.transactionId = ?
-                                AND ho.uniquePaymentId = ?
-                                AND ho.uniqueId = ?
-                                AND o.status = -1";
-                $orderId = Shopware()->Db()->fetchOne($sql, array($transactionId, $paymentId, $uniqueId));
-                if($orderId){
-                    $plugin->logAction(sprintf('The order having payment id %s , transaction id %s and unique id %s is a cancelled order', $paymentId, $transactionId, $uniqueId));
-                    if($config->transactionId == "uniqueId"){
-                        $plugin->logAction(sprintf('The transactionId is changed from %s to %s', $transactionId, $uniqueId));
-                        $transaction_id_field = "uniqueId";
-                    }
-                    $orderId = $this->convertOrder($orderId, ($transaction_id_field == "uniqueId")? $uniqueId: $transactionId, $paymentId);
+                if(in_array($newStatus, array(12,18,17))){
+                    //check if it is a cancelled order
+                    //but only for approved or pending
+                    $sql = "SELECT o.id AS orderId 
+                            FROM hypercharge_orders AS ho
+                            JOIN s_order o ON ho.sessionId = o.temporaryID
+                            WHERE ho.transactionId = ?
+                                    AND ho.uniquePaymentId = ?
+                                    AND ho.uniqueId = ?
+                                    AND o.status = -1";
+                    $orderId = Shopware()->Db()->fetchOne($sql, array($transactionId, $paymentId, $uniqueId));
                     if($orderId){
-                        Shopware()->Db()->update("hypercharge_orders", array('status' => 1), "transactionId = '" . $transactionId . "' AND uniquePaymentId = '" . $paymentId . "'");
+                        $plugin->logAction(sprintf('The order having payment id %s , transaction id %s and unique id %s is a cancelled order', $paymentId, $transactionId, $uniqueId));
+                        if($config->transactionId == "uniqueId"){
+                            $plugin->logAction(sprintf('The transactionId is changed from %s to %s', $transactionId, $uniqueId));
+                            $transaction_id_field = "uniqueId";
+                        }
+                        $orderId = $this->convertOrder($orderId, ($transaction_id_field == "uniqueId")? $uniqueId: $transactionId, $paymentId);
+                        if($orderId){
+                            Shopware()->Db()->update("hypercharge_orders", array('status' => 1), "transactionId = '" . $transactionId . "' AND uniquePaymentId = '" . $paymentId . "'");
+                        }
                     }
+                } else {
+                    $plugin->logAction(sprintf("The transaction is not approved; we don't check if it is a cancelled order"));
                 }
             }
             if (!$orderId) {
@@ -496,37 +531,6 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             //the transactionID was changed to uniqueID
             if($transaction_id_field == "uniqueId"){
                 $transactionId = $uniqueId;
-            }
-
-            // Payment status mapping
-            $newStatus = null;
-            $isAuthorize = $transactionH->transaction_type == 'authorize' || $transactionH->transaction_type == 'authorize3d';
-            switch ($paymentH->status) {
-                case 'approved':
-                case 'chargeback_reversed':
-                    $newStatus = 12;
-                    if ($isAuthorize)
-                        $newStatus = 18;
-                    break;
-                case 'declined':
-                case 'refunded':
-                case 'chargebacked':
-                case 'voided':
-                case 'error':
-                case 'rejected':
-                    $newStatus = 52;//35;
-                    break;
-                case 'pending':
-                case 'pending_async':
-                case 'pre_arbitrated':
-                    $newStatus = 17;
-                    break;
-                default:
-                    break;
-            }
-            if (null === $newStatus) {
-                $plugin->logAction('Undefined transaction status: ' . $paymentH->status);
-                exit();
             }
 
             // Update payment status
