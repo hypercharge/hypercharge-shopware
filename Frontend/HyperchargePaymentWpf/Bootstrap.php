@@ -249,7 +249,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
             'label' => 'transactionID Feld',
             'required' => true,
             'value' => 'transactionId',
-            'store' => array(array('transactionId', 'TransactionID'), array('uniqueId', 'UniqueID'))
+            'store' => array(array('transactionId', 'Shopware transaction ID'), array('uniqueId', 'Hypercharge payment unique ID'), array('transactionUniqueId', 'Hypercharge transaction unique ID'))
         ));
         $positions['transactionId'] = $index++;
         $form->setElement('checkbox', 'recover_rejected_orders', array(
@@ -852,12 +852,22 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
                             `transactionId` varchar(255) collate utf8_unicode_ci NOT NULL default '' ,
                             `uniquePaymentId` varchar(255) collate utf8_unicode_ci NOT NULL default '',
                             `uniqueId` varchar(255) collate utf8_unicode_ci NULL ,
+                            `transactionUniqueId` varchar(255) collate utf8_unicode_ci NOT NULL default '',
                             `status` int(11) NOT NULL default '0',
                             `date` timestamp NOT NULL default CURRENT_TIMESTAMP,
                             PRIMARY KEY  (`id`),
                             KEY `sessionId` (`sessionId`)
                     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
                     ";
+        $exists = Shopware()->Db()->fetchOne("SHOW TABLES LIKE 'hypercharge_orders'");
+        if ($exists) {
+            $exists = Shopware()->Db()->fetchOne("SHOW COLUMNS FROM hypercharge_orders WHERE Field LIKE 'transactionUniqueId';");
+            if (!$exists) {
+                $sqls[] = "
+                            ALTER TABLE `hypercharge_orders` ADD COLUMN `transactionUniqueId` varchar(255) collate utf8_unicode_ci NOT NULL default '' AFTER `uniqueId`;
+                            ";
+            }
+        }
         
         foreach ($sqls as $sql)
             Shopware()->Db()->exec($sql);

@@ -423,6 +423,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             // Identify notification channel
             $transactionH = $notification->getTransaction();
             $plugin->logAction(sprintf('transaction type: %s', $transactionH->transaction_type));
+            $plugin->logAction(sprintf('transaction unique_id: %s', $transactionH->unique_id));
             
             // Payment status mapping
             $newStatus = null;
@@ -540,6 +541,20 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
             // Update payment status
             $plugin->logAction(sprintf('Updating transaction %s with payment id %s to %s', $transactionId, $paymentId, $newStatus));
             $this->savePaymentStatus($transactionId, $paymentId, $newStatus, false);
+            if($config->transactionId == "transactionUniqueId"){
+                if($transactionH->unique_id){
+                    $sql = '
+                                    UPDATE s_order
+                                    SET transactionID = ?
+                                    WHERE transactionID=? AND temporaryID=?
+                            ';
+                    Shopware()->Db()->query($sql, array($transactionH->unique_id, $transactionId, $paymentId));
+                    $plugin->logAction(sprintf('The transactionId is changed from %s to %s', $transactionId, $transactionH->unique_id));
+                }else {
+                    $plugin->logAction(sprintf('The transaction unique Id is empty'));
+                }
+            }
+            Shopware()->Db()->update("hypercharge_orders", array('transactionUniqueId' => $transactionH->unique_id), "$transaction_id_field = '" . $transactionId . "' AND uniquePaymentId = '" . $paymentId . "' AND status = 1");
 
             $plugin->logAction('Notification finished');
 
