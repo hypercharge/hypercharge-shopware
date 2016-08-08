@@ -39,8 +39,9 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                 return;
             }
             if (substr($payment_name, 0, 17) == 'hyperchargemobile') {
+                //this is a very old code, it shouldn't be hit, we kept it just to be sure
                 //for Mobile API we already have the transaction, we just need to save the order
-                $sql = "SELECT * FROM hypercharge_orders WHERE sessionId = ? AND status = 0 ORDER BY id DESC LIMIT 1";
+                $sql = "SELECT * FROM hypercharge_orders WHERE sessionId = ? AND status = 0 AND uniqueId IS NOT NULL ORDER BY id DESC LIMIT 1";
                 $trn = Shopware()->Db()->fetchRow($sql, array(Shopware()->SessionID()));
                 $uniquePaymentId = $trn["uniquePaymentId"];
                 $transactionId = $trn["transactionId"];
@@ -62,6 +63,7 @@ class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Contr
                     }
                     return;
                 }
+                $plugin->logAction(sprintf('Recovered transactionId %s and uniquePaymentId  %s', $transactionId, $uniquePaymentId));
                 $this->redirect(array(
                     'action' => 'success',
                     'forceSecure' => true,
