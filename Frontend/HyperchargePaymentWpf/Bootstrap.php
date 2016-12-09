@@ -921,10 +921,7 @@ class Shopware_Plugins_Frontend_HyperchargePaymentWpf_Bootstrap extends Shopware
      * @return boolean
      */
     function is_email_valid($email) {
-        if (eregi("^[a-z0-9\._-]+@+[a-z0-9\._-]+\.+[a-z]{2,3}$", $email))
-            return TRUE;
-        else
-            return FALSE;
+        return filter_var($email, FILTER_VALIDATE_EMAIL);
     }
     
     /**

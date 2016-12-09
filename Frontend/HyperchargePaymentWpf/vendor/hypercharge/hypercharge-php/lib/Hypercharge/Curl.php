@@ -40,7 +40,7 @@ class Curl implements IHttpsClient {
 		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 		curl_setopt($ch, CURLOPT_USERPWD, $this->user.':'.$this->passw);
 		curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 	}
 
@@ -71,7 +71,7 @@ class Curl implements IHttpsClient {
 
 		curl_setopt($ch, CURLOPT_URL, $url);
 
-		$this->setHeader('text/xml', array('Content-Length: '. mb_strlen($xmlStr)));
+		$this->setHeader('text/xml', array('Content-Length: '. strlen($xmlStr)));
 
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlStr);
 

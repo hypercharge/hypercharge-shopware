@@ -202,7 +202,9 @@ abstract class Constraint implements ConstraintInterface
      */
     protected function checkString($value, $schema = null, $path = null, $i = null)
     {
-        $validator = new String($this->checkMode, $this->uriRetriever);
+        //$validator = new String($this->checkMode, $this->uriRetriever);
+        //nfx: the class String was renamed as StringConstraint as it is not PHP 7 compatible
+        $validator = new StringConstraint($this->checkMode, $this->uriRetriever);
         $validator->check($value, $schema, $path, $i);
 
         $this->addErrors($validator->getErrors());

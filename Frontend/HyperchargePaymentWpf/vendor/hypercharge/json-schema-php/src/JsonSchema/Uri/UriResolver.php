@@ -155,7 +155,7 @@ class UriResolver
      */
     private static function getPathSegments($path) {
         
-        return explode(DIRECTORY_SEPARATOR, $path);
+        return explode("/", $path);
     }
     
     /**

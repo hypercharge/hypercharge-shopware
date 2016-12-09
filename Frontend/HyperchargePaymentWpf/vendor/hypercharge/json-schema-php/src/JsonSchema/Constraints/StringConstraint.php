@@ -12,10 +12,12 @@ namespace JsonSchema\Constraints;
 /**
  * The String Constraints, validates an string against a given schema
  *
+ * nfx: the class String was renamed as StringConstraint as it is not PHP 7 compatible
+ * 
  * @author Robert Schönthal <seroscho@googlemail.com>
  * @author Bruno Prieto Reis <bruno.p.reis@gmail.com>
  */
-class String extends Constraint
+class StringConstraint extends Constraint
 {
     /**
      * {@inheritDoc}

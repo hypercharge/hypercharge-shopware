@@ -1,17 +1,17 @@
 [
     {
         "name": "hypercharge/json-schema-php",
-        "version": "1.3.3",
-        "version_normalized": "1.3.3.0",
+        "version": "1.3.4",
+        "version_normalized": "1.3.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/hypercharge/json-schema-php.git",
-            "reference": "30d622a1a71403cc20eaf1af8aef40eb94c063a3"
+            "reference": "4dc5e4fb496956a889688c035a4df315f6f24fcd"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/hypercharge/json-schema-php/zipball/30d622a1a71403cc20eaf1af8aef40eb94c063a3",
-            "reference": "30d622a1a71403cc20eaf1af8aef40eb94c063a3",
+            "url": "https://api.github.com/repos/hypercharge/json-schema-php/zipball/4dc5e4fb496956a889688c035a4df315f6f24fcd",
+            "reference": "4dc5e4fb496956a889688c035a4df315f6f24fcd",
             "shasum": ""
         },
         "require": {
@@ -21,7 +21,7 @@
             "json-schema/json-schema-test-suite": "1.1.0",
             "phpunit/phpunit": "~3.7.0"
         },
-        "time": "2013-06-13 14:50:07",
+        "time": "2015-12-14 10:44:02",
         "bin": [
             "bin/validate-json"
         ],
@@ -43,11 +43,6 @@
         ],
         "authors": [
             {
-                "name": "Igor Wiedler",
-                "email": "igor@wiedler.ch",
-                "homepage": "http://wiedler.ch/igor/"
-            },
-            {
                 "name": "Bruno Prieto Reis",
                 "email": "bruno.p.reis@gmail.com"
             },
@@ -56,9 +51,12 @@
                 "email": "justin.rainbow@gmail.com"
             },
             {
+                "name": "Igor Wiedler",
+                "email": "igor@wiedler.ch"
+            },
+            {
                 "name": "Robert Schönthal",
-                "email": "robert.schoenthal@gmail.com",
-                "homepage": "http://digitalkaoz.net"
+                "email": "seroscho@googlemail.com"
             }
         ],
         "description": "A library to validate a json schema.",
@@ -70,17 +68,17 @@
     },
     {
         "name": "hypercharge/hypercharge-schema",
-        "version": "1.25.3",
-        "version_normalized": "1.25.3.0",
+        "version": "1.25.4",
+        "version_normalized": "1.25.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/hypercharge/hypercharge-schema.git",
-            "reference": "e5b76e90778dfb3be3d83bb0b98ab77853fe4a06"
+            "reference": "cf3954376d0e6a5a0d18f8a25e70e0b9964e9dd1"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/hypercharge/hypercharge-schema/zipball/e5b76e90778dfb3be3d83bb0b98ab77853fe4a06",
-            "reference": "e5b76e90778dfb3be3d83bb0b98ab77853fe4a06",
+            "url": "https://api.github.com/repos/hypercharge/hypercharge-schema/zipball/cf3954376d0e6a5a0d18f8a25e70e0b9964e9dd1",
+            "reference": "cf3954376d0e6a5a0d18f8a25e70e0b9964e9dd1",
             "shasum": ""
         },
         "require": {
@@ -90,7 +88,7 @@
         "require-dev": {
             "simpletest/simpletest": "*"
         },
-        "time": "2015-02-03 12:11:11",
+        "time": "2015-12-14 10:41:40",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -125,17 +123,17 @@
     },
     {
         "name": "hypercharge/hypercharge-php",
-        "version": "1.25.5",
-        "version_normalized": "1.25.5.0",
+        "version": "1.25.6",
+        "version_normalized": "1.25.6.0",
         "source": {
             "type": "git",
             "url": "https://github.com/hypercharge/hypercharge-php.git",
-            "reference": "fd3e091007148325b70f0b0761886125f78c5251"
+            "reference": "c51bd27602b7148a40b908de5e88005468133248"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/hypercharge/hypercharge-php/zipball/fd3e091007148325b70f0b0761886125f78c5251",
-            "reference": "fd3e091007148325b70f0b0761886125f78c5251",
+            "url": "https://api.github.com/repos/hypercharge/hypercharge-php/zipball/c51bd27602b7148a40b908de5e88005468133248",
+            "reference": "c51bd27602b7148a40b908de5e88005468133248",
             "shasum": ""
         },
         "require": {
@@ -150,7 +148,7 @@
             "mockery/mockery": "dev-master@dev",
             "simpletest/simpletest": "*"
         },
-        "time": "2014-09-19 17:51:12",
+        "time": "2015-12-14 10:41:13",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
