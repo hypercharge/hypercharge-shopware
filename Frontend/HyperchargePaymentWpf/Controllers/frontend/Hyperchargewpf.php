@@ -8,8 +8,25 @@
  * @author nf, ma info@nfxmedia.de
  * @package nfxMEDIA
  */
-class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Controllers_Frontend_Payment {
+class Shopware_Controllers_Frontend_PaymentHyperchargeWpf extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware {
 
+    /**
+     * implements CSRFWhitelistAware
+     * @return type
+     */
+    public function getWhitelistedCSRFActions()
+    {
+        return array(
+            'index',
+            'success',
+            'cancel',
+            'failed',
+            'notify',
+            'return',
+            'hyperchargeMobile'
+        );
+    }
+    
     /**
      * Frontend index action controller
      * @return void

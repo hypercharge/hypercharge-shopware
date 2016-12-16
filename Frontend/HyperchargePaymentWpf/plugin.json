@@ -10,12 +10,13 @@
     "support": "support@nfxmedia.de",
     "description": "<p><img src='data:image/png;base64,<%IMG%>' /></p><p style='font-size:12px; font-weight: bold;'>Hypercharge WebPaymentForm allows you to use a variety of payment methods, both online and off-line. Any sensitive information is safely aquired an processed on out platform</p>",
 
-    "currentVersion": "2.2.9",
+    "currentVersion": "2.3.0",
 
     "changelog": {
         "de": {
         },
         "en": {
+            "2.3.0" : "implement CSRFWhitelistAware // 2016-12-16",
             "2.2.9" : "fix for PHP7 // 2016-12-09",
             "2.2.8" : "add transaction unique id as the third option // 2016-02-24",
             "2.2.7" : "add the option Abgelehnte Bestellungen wiederherstellen // 2016-02-18",
