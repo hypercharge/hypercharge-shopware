@@ -2,7 +2,7 @@
 <iframe id="paymentFrame" src="{$nfxHyperchargeGatewayUrl}"
         scrolling="yes"
         frameborder="0"
-        style="min-height:{$nfxHeight}px; height:auto !important;"
+        style="width:{$nfxWidth}px;min-height:{$nfxHeight}px; height:auto !important;"
 >
 </iframe>
 </div>
